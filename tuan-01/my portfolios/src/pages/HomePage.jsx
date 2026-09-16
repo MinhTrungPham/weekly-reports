@@ -19,22 +19,57 @@ import Card from "../components/ui/Card";
 import Tag from "../components/ui/Tag";
 
 const projects = [
-  { number: "01", title: "Mosaic Finance", description: "A calmer way for teams to understand their money.", tags: ["Product design", "React"] },
-  { number: "02", title: "Field Notes", description: "An editorial workspace for ideas that deserve room.", tags: ["Strategy", "Interface"] },
-  { number: "03", title: "Northstar Health", description: "Making complex care journeys feel more human.", tags: ["Research", "Prototyping"] },
+  {
+    number: "01",
+    title: "Project Management System",
+    description: "A full-stack Agile/Scrum platform for projects, sprints, tasks, collaboration, meetings, and progress tracking.",
+    tags: ["Node.js", "React", "AI"],
+  },
+  {
+    number: "02",
+    title: "Cosmetic E-commerce Website",
+    description: "A multi-role shopping platform with VNPay checkout, product ranking, OTP verification, and real-time chat.",
+    tags: ["Java", "Spring Boot", "SQL Server"],
+  },
+  {
+    number: "03",
+    title: "Dac san Soc Trang",
+    description: "An e-commerce platform with order validation, loyalty points, customer support, and AI comment moderation.",
+    tags: ["Next.js", "MongoDB", "MoMo"],
+  },
 ];
 
 const skillGroups = [
-  { label: "Programming", icon: <Code2 size={20} />, items: ["JavaScript", "TypeScript", "Python", "Java"] },
-  { label: "Backend", icon: <Server size={20} />, items: ["Node.js", "Express", "REST API", "Authentication"] },
-  { label: "Frontend", icon: <Monitor size={20} />, items: ["React", "Vue", "Ant Design", "Responsive UI"] },
-  { label: "Database", icon: <Database size={20} />, items: ["PostgreSQL", "MongoDB", "MySQL", "Redis"] },
-  { label: "Tools", icon: <Wrench size={20} />, items: ["Git", "Docker", "Figma", "VS Code"] },
+  { label: "Programming", icon: <Code2 size={20} />, items: ["Java", "JavaScript", "TypeScript", "C++", "Python (Basic)"] },
+  {
+    label: "Backend",
+    icon: <Server size={20} />,
+    items: ["Spring Boot", "Spring Security", "JPA / Hibernate", "Node.js", "Express.js", "REST APIs", "JWT", "Socket.IO"],
+  },
+  { label: "Frontend", icon: <Monitor size={20} />, items: ["React", "Next.js", "TypeScript", "Thymeleaf", "Tailwind CSS", "Bootstrap"] },
+  { label: "Database", icon: <Database size={20} />, items: ["MySQL", "SQL Server", "MongoDB", "PostgreSQL", "Redis"] },
+  { label: "Tools & AI", icon: <Wrench size={20} />, items: ["Git", "GitHub", "Docker", "Postman", "n8n", "Gemini API", "OpenAI API"] },
 ];
 
 const timeline = [
-  { period: "2024 — Present", title: "Software Developer", place: "Building thoughtful digital products", icon: <BriefcaseBusiness size={18} /> },
-  { period: "2021 — 2024", title: "Computer Science", place: "University education & independent projects", icon: <GraduationCap size={18} /> },
+  {
+    period: "Aug 2025 — Oct 2025",
+    title: "Java Developer Intern",
+    place: "HPT Vietnam Corporation · Java, Spring Boot, backend services",
+    icon: <BriefcaseBusiness size={18} />,
+  },
+  {
+    period: "2024 — 2025",
+    title: "Computer Lab Support Assistant",
+    place: "HCMUTE · Hardware, software, Windows, LAN, and user support",
+    icon: <BriefcaseBusiness size={18} />,
+  },
+  {
+    period: "Aug 2022 — Sep 2026",
+    title: "Bachelor of Information Technology",
+    place: "HCMUTE · GPA 8.95/10.0 · Academic encouragement scholarships",
+    icon: <GraduationCap size={18} />,
+  },
 ];
 const peepReportUrl = import.meta.env.VITE_PEEP_REPORT_URL || "#peep-report";
 
@@ -43,12 +78,13 @@ function HomePage() {
     <div id="top" className="home-page">
       <section className="hero-section page-container">
         <div className="hero-copy">
-          <p className="eyebrow">Minh Tran / Software Developer</p>
+          <p className="eyebrow">Pham Minh Trung / Java &amp; Full-stack Developer</p>
           <h1>
-            I build digital products with <em>clarity.</em>
+            I build reliable software with <em>purpose.</em>
           </h1>
           <p className="hero-summary">
-            A software developer focused on reliable systems, considered interfaces, and turning complex problems into useful experiences.
+            Information Technology graduate with hands-on experience in backend and full-stack web development, business logic, and technical problem
+            solving.
           </p>
           <div className="hero-actions">
             <Button href="#projects" type="primary" icon={<ArrowDownRight size={17} />}>
@@ -61,7 +97,7 @@ function HomePage() {
         </div>
         <div className="hero-aside" aria-label="Current availability">
           <div className="orbit-mark">
-            <span>MT</span>
+            <span>PMT</span>
           </div>
           <p>
             <span className="status-dot" /> Open to meaningful work
@@ -70,32 +106,55 @@ function HomePage() {
       </section>
 
       <section id="about" className="about-section page-container content-section">
-        <p className="section-label">01 / About me</p>
-        <div className="about-grid">
+        <div className="about-heading">
+          <p className="section-label">01 / About me</p>
+          <span className="about-index">A01</span>
+        </div>
+        <div className="about-layout">
           <div className="about-lead">
+            <p className="about-kicker">The short version</p>
             <h2>
               Curious by nature,
               <br />
               <span>practical by craft.</span>
             </h2>
-            <p>
-              I enjoy understanding how things work, then making them work better. My practice moves between backend logic and frontend detail, always
-              with the person using the product in mind.
+            <p className="about-description">
+              I am an Information Technology graduate with hands-on experience in backend and full-stack web development. I enjoy implementing
+              business logic, solving technical problems, and building software for real-world workflows.
             </p>
           </div>
-          <div className="about-facts">
-            <div>
-              <p className="fact-label">Education</p>
-              <p>
-                Computer Science
-                <br />
-                Software engineering foundations
-              </p>
+          <div className="about-profile-card">
+            <div className="profile-card-top">
+              <span>Profile snapshot</span>
+              <span className="profile-dot" />
             </div>
-            <div>
-              <p className="fact-label">Direction</p>
-              <p>Growing into a product-minded engineer who can own a problem from first sketch to production.</p>
+            <p className="profile-role">
+              Java / Full-stack
+              <br />
+              Developer
+            </p>
+            <div className="profile-card-bottom">
+              <span>HCMUTE</span>
+              <span>2026</span>
             </div>
+          </div>
+        </div>
+        <div className="about-stats">
+          <div className="about-stat">
+            <strong>8.95</strong>
+            <span>GPA / 10.0</span>
+          </div>
+          <div className="about-stat">
+            <strong>03</strong>
+            <span>Selected projects</span>
+          </div>
+          <div className="about-stat">
+            <strong>705</strong>
+            <span>TOEIC score</span>
+          </div>
+          <div className="about-direction">
+            <p className="fact-label">Direction</p>
+            <p>Seeking a Java Developer or Full-stack Developer position to contribute to real-world projects and grow as a software engineer.</p>
           </div>
         </div>
       </section>
@@ -123,7 +182,7 @@ function HomePage() {
       <section id="projects" className="work-section page-container content-section">
         <div className="section-heading">
           <p className="section-label">03 / Selected projects</p>
-          <span>2022—25</span>
+          <span>2025—26</span>
         </div>
         <div className="project-grid">
           {projects.map((project) => (
@@ -170,7 +229,10 @@ function HomePage() {
             <br />
             <em>one report at a time.</em>
           </h2>
-          <p>My weekly PEEP reports document what I am learning, building, and improving along the way.</p>
+          <p>
+            My weekly PEEP reports document what I am learning, building, and improving as I grow from university projects into professional software
+            development.
+          </p>
         </div>
         <Button href={peepReportUrl} icon={<FileText size={17} />}>
           View PEEP report
@@ -187,14 +249,17 @@ function HomePage() {
           </h2>
         </div>
         <div className="contact-details">
-          <a className="email-link" href="mailto:hello@minhtran.dev">
-            hello@minhtran.dev <ArrowUpRight size={20} />
+          <a className="email-link" href="mailto:minhtrungbttv@gmail.com">
+            minhtrungbttv@gmail.com <ArrowUpRight size={20} />
+          </a>
+          <a className="phone-link" href="tel:+84902137976">
+            0902 137 976
           </a>
           <div className="social-links">
-            <a href="https://github.com" aria-label="GitHub">
+            <a href="https://github.com/" aria-label="GitHub">
               <GitBranch size={19} />
             </a>
-            <a href="https://linkedin.com" aria-label="LinkedIn">
+            <a href="https://www.linkedin.com/" aria-label="LinkedIn">
               <Link2 size={19} />
             </a>
             <a href="#peep-report" aria-label="PEEP report">

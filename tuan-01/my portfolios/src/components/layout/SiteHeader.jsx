@@ -17,8 +17,8 @@ function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="site-header">
-      <a className="brand" href="#top" aria-label="Minh Tran home">
-        MT<span>.</span>
+      <a className="brand" href="#top" aria-label="Pham Minh Trung home">
+        PMT<span>.</span>
       </a>
       <nav className="desktop-nav" aria-label="Primary navigation">
         {navigation.map((item) => (
