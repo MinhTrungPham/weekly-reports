@@ -6,7 +6,10 @@ import IconButton from "../ui/IconButton";
 
 const navigation = [
   { label: "About", href: "#about" },
-  { label: "Work", href: "#work" },
+  { label: "Skills", href: "#skills" },
+  { label: "Projects", href: "#projects" },
+  { label: "Experience", href: "#experience" },
+  { label: "PEEP", href: "#peep-report" },
   { label: "Contact", href: "#contact" },
 ];
 
