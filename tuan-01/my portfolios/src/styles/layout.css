@@ -1,0 +1,70 @@
+.site-shell {
+  overflow: hidden;
+}
+.site-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: 28px 40px;
+}
+.brand {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+}
+.brand span {
+  color: #e55738;
+}
+.desktop-nav {
+  display: flex;
+  gap: 36px;
+  margin-left: 130px;
+}
+.desktop-nav a,
+.site-footer {
+  color: #77736c;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.desktop-nav a:hover,
+.mobile-nav a:hover {
+  color: #e55738;
+}
+.ant-btn {
+  border-radius: 2px;
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  height: 44px;
+  padding: 0 18px;
+}
+.ant-btn-primary {
+  background: #282725;
+  border-color: #282725;
+}
+.ant-btn-primary:hover {
+  background: #e55738 !important;
+  border-color: #e55738 !important;
+}
+.header-cta {
+  height: 38px;
+}
+.menu-button {
+  background: none;
+  border: 0;
+  color: #282725;
+  display: none;
+  padding: 6px;
+}
+.icon-button {
+  cursor: pointer;
+}
+.page-container {
+  margin: 0 auto;
+  max-width: 1280px;
+  padding-left: 40px;
+  padding-right: 40px;
+}

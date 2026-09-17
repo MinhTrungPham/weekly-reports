@@ -1,0 +1,205 @@
+/* Editorial layouts for techniques and quotes */
+.jutsu-section {
+  background: radial-gradient(circle at 80% 20%, rgba(255, 107, 0, 0.11), transparent 28%), #0b0b0f;
+}
+
+.technique-list {
+  border-top: 1px solid var(--line);
+}
+
+.technique-item {
+  display: grid;
+  grid-template-columns: 64px 120px 1fr 38px;
+  align-items: center;
+  gap: 28px;
+  min-height: 142px;
+  border-bottom: 1px solid var(--line);
+  transition:
+    padding 260ms ease,
+    background-color 260ms ease;
+}
+
+.technique-item:hover {
+  padding-inline: 22px;
+  background: linear-gradient(90deg, rgba(255, 107, 0, 0.1), transparent 75%);
+}
+
+.technique-item__index {
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.technique-item__symbol {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 72px;
+  line-height: 1;
+  transition:
+    color 260ms ease,
+    transform 260ms ease;
+}
+
+.technique-item:hover .technique-item__symbol {
+  color: var(--accent-strong);
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.technique-item__content p {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.technique-item__content h3 {
+  display: inline-block;
+  margin: 0 14px 0 0;
+  font-size: clamp(28px, 4vw, 46px);
+  letter-spacing: -0.04em;
+}
+
+.technique-item__content small {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.technique-item__arrow {
+  color: var(--accent);
+  font-size: 24px;
+  transition: transform 260ms ease;
+}
+
+.technique-item:hover .technique-item__arrow {
+  transform: translate(5px, -5px);
+}
+
+.quotes-section {
+  background: #15151c;
+}
+
+.quote-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 90px;
+  align-items: stretch;
+}
+
+.quote-feature {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 390px;
+  padding: 34px 38px;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.16), transparent 58%);
+}
+
+.quote-mark {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 86px;
+  line-height: 0.45;
+}
+
+.quote-feature blockquote {
+  max-width: 680px;
+  margin: 44px 0 60px;
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.quote-feature footer,
+.quote-row footer {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quote-feature footer strong,
+.quote-row footer strong {
+  font-size: 12px;
+}
+
+.quote-feature footer small,
+.quote-row footer small {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.quote-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.quote-row {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 18px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.quote-row:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.quote-row__index {
+  padding-top: 4px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.quote-row blockquote {
+  margin: 0 0 22px;
+  color: var(--foreground);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+@media (max-width: 760px) {
+  .technique-item {
+    grid-template-columns: 36px 68px 1fr 20px;
+    gap: 12px;
+    min-height: 118px;
+  }
+
+  .technique-item:hover {
+    padding-inline: 10px;
+  }
+
+  .technique-item__symbol {
+    font-size: 48px;
+  }
+
+  .technique-item__content h3 {
+    font-size: 25px;
+  }
+
+  .technique-item__content small {
+    display: block;
+    margin-top: 5px;
+  }
+
+  .quote-layout {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .quote-feature {
+    min-height: 330px;
+    padding: 28px 24px;
+  }
+
+  .quote-feature blockquote {
+    margin: 34px 0 44px;
+    font-size: 38px;
+  }
+}

@@ -1,0 +1,198 @@
+/* Motion system */
+@keyframes naruto-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes naruto-image-in {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes naruto-line-draw {
+  from {
+    opacity: 0;
+    transform: translateX(80px) rotate(-28deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(-28deg);
+  }
+}
+
+@keyframes naruto-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes naruto-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 0, 0);
+  }
+}
+
+.naruto-hero__copy > * {
+  opacity: 0;
+  animation: naruto-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.naruto-hero__copy > :nth-child(1) {
+  animation-delay: 100ms;
+}
+.naruto-hero__copy > :nth-child(2) {
+  animation-delay: 180ms;
+}
+.naruto-hero__copy > :nth-child(3) {
+  animation-delay: 260ms;
+}
+.naruto-hero__copy > :nth-child(4) {
+  animation-delay: 340ms;
+}
+
+.naruto-hero__visual {
+  opacity: 0;
+  animation: naruto-image-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
+}
+
+.naruto-hero::after {
+  transform-origin: right center;
+  animation: naruto-line-draw 900ms ease-out 450ms both;
+}
+
+.hero-seal {
+  animation: naruto-pulse 2.8s ease-in-out 1.2s infinite;
+}
+
+.hero-kanji {
+  animation: naruto-float 5s ease-in-out 1.2s infinite;
+}
+
+.bento-card,
+.character-card,
+.moment-card,
+.jutsu-card,
+.quote-card {
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+
+.bento-card:hover,
+.character-card:hover,
+.moment-card:hover,
+.jutsu-card:hover,
+.quote-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 167, 38, 0.65);
+}
+
+.character-card__image,
+.moment-card__image {
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 500ms ease;
+}
+
+.character-card:hover .character-card__image,
+.moment-card:hover .moment-card__image {
+  filter: saturate(1.2);
+  transform: scale(1.05);
+}
+
+.team-row {
+  transition:
+    padding 260ms ease,
+    background-color 260ms ease;
+}
+
+.team-row:hover {
+  padding-inline: 14px;
+  background: rgba(255, 107, 0, 0.06);
+}
+
+.team-row__arrow {
+  transition:
+    transform 260ms ease,
+    color 260ms ease;
+}
+
+.team-row:hover .team-row__arrow {
+  color: var(--accent-strong);
+  transform: translate(4px, -4px);
+}
+
+.timeline-item {
+  position: relative;
+  transition:
+    padding-left 260ms ease,
+    background-color 260ms ease;
+}
+
+.timeline-item::before {
+  position: absolute;
+  top: 34px;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.timeline-item:hover {
+  padding-left: 38px;
+  background: linear-gradient(90deg, rgba(255, 107, 0, 0.08), transparent 70%);
+}
+
+.timeline-item:hover::before {
+  box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.12);
+  transform: scale(1.2);
+}
+
+.final-cta h2 {
+  transition:
+    color 300ms ease,
+    text-shadow 300ms ease;
+}
+
+.final-cta:hover h2 {
+  color: #ffc15c;
+  text-shadow: 0 0 34px rgba(255, 107, 0, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
