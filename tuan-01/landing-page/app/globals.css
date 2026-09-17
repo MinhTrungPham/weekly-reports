@@ -2078,10 +2078,13 @@ body {
   }
 
   .jutsu-orbit-stage {
-    min-height: 450px;
+    display: block;
+    min-height: 585px;
+    overflow: visible;
   }
   .jutsu-orbit {
     width: min(390px, 94vw);
+    margin-inline: auto;
   }
   .technique-orbit-item {
     width: 100px;
@@ -2100,15 +2103,24 @@ body {
     font-size: 11px;
   }
   .jutsu-preview-panel {
-    width: 210px;
-    height: 270px;
+    position: relative;
+    top: auto;
+    width: auto;
+    height: 170px;
     padding: 10px;
+    transform: none;
+  }
+  .jutsu-preview-panels {
+    inset: auto 0 -190px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
   .jutsu-preview-panel--left {
-    left: -220px;
+    left: auto;
   }
   .jutsu-preview-panel--right {
-    right: -220px;
+    right: auto;
   }
   .jutsu-preview-panel strong {
     font-size: 11px;
