@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naruto Landing Page
 
-## Getting Started
+Landing page giới thiệu thế giới Naruto theo phong cách **Dark Cinematic + Japanese + Bento Grid**.
 
-First, run the development server:
+Trang tập trung vào hành trình shinobi, nhân vật, các mối quan hệ, khoảnh khắc nổi bật và hệ thống Jutsu tương tác.
+
+## Công nghệ
+
+- Next.js 16 với App Router
+- React 19
+- TypeScript
+- Bento Design System: `@buildo/bento-design-system`
+- Tailwind CSS/PostCSS
+- CSS custom cho theme, animation và responsive layout
+
+## Chạy project
+
+Cài dependency:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Chạy development server:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Mở [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+Kiểm tra lint:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Build production:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm build
+```
 
-## Deploy on Vercel
+Chạy bản production:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Cấu trúc source
+
+```text
+app/
+├── layout.tsx
+├── page.tsx
+├── globals.css
+└── styles/
+    ├── base.css
+    ├── naruto-theme.css
+    ├── motion.css
+    ├── sections.css
+    └── jutsu-orbit.css
+
+components/
+├── layout/
+│   ├── MarketingLayout.tsx
+│   ├── SiteHeader.tsx
+│   └── SiteFooter.tsx
+├── sections/
+│   ├── NarutoLanding.tsx
+│   └── naruto/
+│       ├── HeroSection.tsx
+│       ├── AboutSection.tsx
+│       ├── ShinobiWorldSection.tsx
+│       ├── CharactersSection.tsx
+│       ├── JourneySection.tsx
+│       ├── IconicMomentsSection.tsx
+│       ├── JutsuSection.tsx
+│       ├── QuotesSection.tsx
+│       ├── RivalrySection.tsx
+│       └── NarutoCtaSection.tsx
+└── ui/
+    ├── Container.tsx
+    └── Section.tsx
+
+data/
+└── naruto.ts
+```
+
+## Nội dung landing page
+
+Landing page gồm các khu vực:
+
+1. Hero: thông điệp chính và hình ảnh Naruto.
+2. About Naruto: câu chuyện về hành trình được công nhận.
+3. Shinobi World: Chakra, Bonds và Will of Fire.
+4. Characters: Naruto, Sasuke và Sakura.
+5. The Journey: timeline từ Academy đến Legacy.
+6. Iconic Moments: các khoảnh khắc tiêu biểu.
+7. Jutsu: orbit tương tác với 6 kỹ năng.
+8. Quotes: các câu nói nổi bật.
+9. Naruto vs Sasuke: section về mối quan hệ đối đầu.
+10. CTA: lời kêu gọi tiếp tục hành trình.
+
+## Visual system
+
+```text
+Background: #0B0B0F
+Surface:    #15151C
+Orange:     #FF6B00
+Yellow:     #FFA726
+White:      #F5F5F5
+Muted:      #9CA3AF
+```
+
+## Validation
+
+Project đã được kiểm tra bằng:
+
+```bash
+pnpm lint
+pnpm build
+```
