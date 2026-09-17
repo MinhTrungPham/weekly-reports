@@ -66,7 +66,7 @@ export const narutoHero: HeroContent = {
   eyebrow: "木ノ葉隠れの里 / THE HIDDEN LEAF",
   title: "The way of the ninja is never a straight line.",
   description: "A cinematic field guide to the shinobi world, its bonds, and one loud-hearted ninja who refused to give up.",
-  image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrumpc_AhCJsrrimDisTtigTFzjvz6_m5tPXqeZWm1ag&s=10",
+  image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdTv_S0APGcZXaV-tfgAk-sH9kwyhU_1X-3hTevj_tyw&s=10",
   imageAlt: "Naruto Uzumaki on the cover of the first manga volume",
   badge: "火の意志 / WILL OF FIRE",
 };

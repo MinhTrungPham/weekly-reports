@@ -265,6 +265,7 @@ body {
 .about-poster strong {
   right: 24px;
   bottom: 20px;
+  color: var(--accent);
   font-size: 42px;
   letter-spacing: -0.06em;
   line-height: 0.85;
