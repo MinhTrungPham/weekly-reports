@@ -1,0 +1,739 @@
+/* Jutsu orbit */
+@keyframes jutsu-orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jutsu-orbit-counter {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.jutsu-orbit-stage {
+  display: grid;
+  min-height: 620px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.jutsu-orbit {
+  position: relative;
+  width: min(620px, 90vw);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 107, 0, 0.13) 0 15%, transparent 15.5% 48%, rgba(255, 107, 0, 0.06) 48.5% 49%, transparent 49.5%),
+    radial-gradient(circle, rgba(255, 167, 38, 0.07), transparent 60%);
+  box-shadow:
+    0 0 90px rgba(255, 107, 0, 0.1),
+    inset 0 0 80px rgba(255, 107, 0, 0.06);
+}
+
+.jutsu-orbit::before,
+.jutsu-orbit::after {
+  position: absolute;
+  inset: 8%;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  content: "";
+}
+
+.jutsu-orbit::after {
+  inset: 24%;
+  border-style: solid;
+  border-color: rgba(255, 107, 0, 0.2);
+}
+
+.jutsu-orbit__track {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: jutsu-orbit-spin 28s linear infinite;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__track,
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item__body {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 178px;
+  height: 178px;
+  margin: -89px;
+}
+
+.technique-orbit-item:nth-child(1) {
+  transform: rotate(0deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(2) {
+  transform: rotate(90deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(3) {
+  transform: rotate(180deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(4) {
+  transform: rotate(270deg) translateY(-238px);
+}
+
+.technique-orbit-item__body {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 1px solid rgba(255, 167, 38, 0.34);
+  border-radius: 50%;
+  background: rgba(21, 21, 28, 0.92);
+  text-align: center;
+  animation: jutsu-orbit-counter 28s linear infinite;
+  cursor: pointer;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    background-color 240ms ease;
+}
+
+.technique-orbit-item:hover .technique-orbit-item__body {
+  z-index: 10;
+  border-color: var(--accent);
+  background: rgba(11, 11, 15, 0.98);
+  box-shadow:
+    0 0 0 8px rgba(255, 107, 0, 0.1),
+    0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.technique-orbit-item__index {
+  position: absolute;
+  top: 18px;
+  color: var(--ink-muted);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.technique-orbit-item__symbol {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 52px;
+  line-height: 1;
+}
+
+.technique-orbit-item h3 {
+  margin: 6px 0 4px;
+  color: var(--foreground);
+  font-size: 17px;
+}
+
+.technique-orbit-item small {
+  color: var(--ink-muted);
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.technique-orbit-item__preview {
+  position: absolute;
+  right: -112px;
+  bottom: 8px;
+  width: 150px;
+  height: 96px;
+  overflow: hidden;
+  border: 2px solid var(--accent);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.75) translateY(12px);
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease;
+}
+
+.technique-orbit-item__preview::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), transparent 65%);
+  content: "";
+}
+
+.technique-orbit-item:hover .technique-orbit-item__preview {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.jutsu-orbit__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: 150px;
+  height: 150px;
+  place-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: #0b0b0f;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.jutsu-orbit__center span {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 58px;
+  line-height: 0.9;
+}
+
+.jutsu-orbit__center small {
+  color: var(--ink-muted);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit-stage {
+    min-height: 440px;
+  }
+
+  .jutsu-orbit {
+    width: min(390px, 96vw);
+  }
+
+  .technique-orbit-item {
+    width: 124px;
+    height: 124px;
+    margin: -62px;
+  }
+
+  .technique-orbit-item:nth-child(1) {
+    transform: rotate(0deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(2) {
+    transform: rotate(90deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(3) {
+    transform: rotate(180deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(4) {
+    transform: rotate(270deg) translateY(-145px);
+  }
+
+  .technique-orbit-item__body {
+    padding: 10px;
+  }
+  .technique-orbit-item__index {
+    top: 12px;
+  }
+  .technique-orbit-item__symbol {
+    font-size: 38px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 13px;
+  }
+  .technique-orbit-item small {
+    display: none;
+  }
+  .technique-orbit-item__preview {
+    right: -86px;
+    width: 112px;
+    height: 72px;
+  }
+  .jutsu-orbit__center {
+    width: 100px;
+    height: 100px;
+  }
+  .jutsu-orbit__center span {
+    font-size: 40px;
+  }
+}
+
+/* Two-ring orbit: three inner techniques and three outer techniques */
+.jutsu-orbit-stage {
+  min-height: 540px;
+}
+
+.jutsu-orbit {
+  width: min(520px, 78vw);
+}
+
+.jutsu-orbit__track {
+  animation-duration: 32s;
+}
+
+.technique-orbit-item {
+  width: 126px;
+  height: 126px;
+  margin: -63px;
+}
+
+.technique-orbit-item:nth-child(1) {
+  transform: rotate(0deg) translateY(-130px) rotate(0deg);
+}
+.technique-orbit-item:nth-child(2) {
+  transform: rotate(120deg) translateY(-130px) rotate(-120deg);
+}
+.technique-orbit-item:nth-child(3) {
+  transform: rotate(240deg) translateY(-130px) rotate(-240deg);
+}
+.technique-orbit-item:nth-child(4) {
+  transform: rotate(60deg) translateY(-210px) rotate(-60deg);
+}
+.technique-orbit-item:nth-child(5) {
+  transform: rotate(180deg) translateY(-210px) rotate(-180deg);
+}
+.technique-orbit-item:nth-child(6) {
+  transform: rotate(300deg) translateY(-210px) rotate(-300deg);
+}
+
+.technique-orbit-item__body {
+  animation-duration: 32s;
+}
+
+.technique-orbit-item__symbol {
+  font-size: 42px;
+}
+
+.technique-orbit-item h3 {
+  font-size: 15px;
+}
+
+.technique-orbit-item__preview {
+  position: fixed;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  z-index: 20;
+  width: 220px;
+  height: 280px;
+  border-width: 1px;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.82);
+}
+
+.technique-orbit-item:nth-child(-n + 3) .technique-orbit-item__preview {
+  left: 5vw;
+}
+
+.technique-orbit-item:nth-child(n + 4) .technique-orbit-item__preview {
+  right: 5vw;
+}
+
+.technique-orbit-item:hover .technique-orbit-item__preview {
+  transform: translateY(-50%) scale(1);
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit-stage {
+    min-height: 410px;
+  }
+
+  .jutsu-orbit {
+    width: min(360px, 92vw);
+  }
+
+  .technique-orbit-item {
+    width: 98px;
+    height: 98px;
+    margin: -49px;
+  }
+
+  .technique-orbit-item:nth-child(1) {
+    transform: rotate(0deg) translateY(-92px) rotate(0deg);
+  }
+  .technique-orbit-item:nth-child(2) {
+    transform: rotate(120deg) translateY(-92px) rotate(-120deg);
+  }
+  .technique-orbit-item:nth-child(3) {
+    transform: rotate(240deg) translateY(-92px) rotate(-240deg);
+  }
+  .technique-orbit-item:nth-child(4) {
+    transform: rotate(60deg) translateY(-145px) rotate(-60deg);
+  }
+  .technique-orbit-item:nth-child(5) {
+    transform: rotate(180deg) translateY(-145px) rotate(-180deg);
+  }
+  .technique-orbit-item:nth-child(6) {
+    transform: rotate(300deg) translateY(-145px) rotate(-300deg);
+  }
+
+  .technique-orbit-item__symbol {
+    font-size: 31px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 11px;
+  }
+  .technique-orbit-item__index {
+    top: 10px;
+    font-size: 8px;
+  }
+  .technique-orbit-item__preview {
+    width: 105px;
+    height: 125px;
+  }
+  .technique-orbit-item:nth-child(-n + 3) .technique-orbit-item__preview {
+    left: 2vw;
+  }
+  .technique-orbit-item:nth-child(n + 4) .technique-orbit-item__preview {
+    right: 2vw;
+  }
+  .jutsu-orbit__center {
+    width: 86px;
+    height: 86px;
+  }
+  .jutsu-orbit__center span {
+    font-size: 34px;
+  }
+}
+
+/* Upright two-ring orbit with shared side previews */
+@keyframes jutsu-inner-position {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, -145px);
+  }
+  33% {
+    transform: translate(-50%, -50%) translate(126px, 73px);
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(-126px, 73px);
+  }
+}
+
+@keyframes jutsu-outer-position {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, -245px);
+  }
+  33% {
+    transform: translate(-50%, -50%) translate(212px, 123px);
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(-212px, 123px);
+  }
+}
+
+.jutsu-orbit-stage {
+  min-height: 640px;
+  overflow: visible;
+}
+
+.jutsu-orbit {
+  width: min(600px, 82vw);
+}
+
+.jutsu-orbit__track {
+  animation: none;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__track {
+  animation-play-state: running;
+}
+
+.technique-orbit-item {
+  width: 132px;
+  height: 132px;
+  margin: 0;
+  animation-duration: 24s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-play-state: running;
+}
+
+.technique-orbit-item--inner {
+  animation-name: jutsu-inner-position;
+}
+.technique-orbit-item--outer {
+  animation-name: jutsu-outer-position;
+}
+.technique-orbit-item:nth-child(2),
+.technique-orbit-item:nth-child(5) {
+  animation-delay: -8s;
+}
+.technique-orbit-item:nth-child(3),
+.technique-orbit-item:nth-child(6) {
+  animation-delay: -16s;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item__body {
+  animation: none;
+  transform: none;
+}
+
+.technique-orbit-item__symbol {
+  font-size: 48px;
+}
+
+.technique-orbit-item h3 {
+  margin: 8px 0 0;
+  font-size: 16px;
+}
+
+.jutsu-preview-panels {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.jutsu-preview-panels.is-visible {
+  opacity: 1;
+}
+
+.jutsu-preview-panel {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  width: 345px;
+  height: 450px;
+  flex-direction: column;
+  justify-content: end;
+  padding: 16px;
+  border: 1px solid var(--accent);
+  background-color: var(--surface);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  transform: translateY(-50%);
+}
+
+.jutsu-preview-panel::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(11, 11, 15, 0.95));
+  content: "";
+}
+
+.jutsu-preview-panel > * {
+  position: relative;
+  z-index: 1;
+}
+.jutsu-preview-panel span {
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.jutsu-preview-panel strong {
+  margin-top: 6px;
+  font-size: 15px;
+}
+.jutsu-preview-panel--left {
+  left: -395px;
+}
+.jutsu-preview-panel--right {
+  right: -395px;
+}
+
+@media (max-width: 760px) {
+  @keyframes jutsu-inner-position-mobile {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translate(0, -100px);
+    }
+    33% {
+      transform: translate(-50%, -50%) translate(87px, 50px);
+    }
+    66% {
+      transform: translate(-50%, -50%) translate(-87px, 50px);
+    }
+  }
+
+  @keyframes jutsu-outer-position-mobile {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translate(0, -170px);
+    }
+    33% {
+      transform: translate(-50%, -50%) translate(147px, 85px);
+    }
+    66% {
+      transform: translate(-50%, -50%) translate(-147px, 85px);
+    }
+  }
+
+  .jutsu-orbit-stage {
+    display: block;
+    min-height: 585px;
+    overflow: visible;
+  }
+  .jutsu-orbit {
+    width: min(390px, 94vw);
+    margin-inline: auto;
+  }
+  .technique-orbit-item {
+    width: 100px;
+    height: 100px;
+  }
+  .technique-orbit-item--inner {
+    animation-name: jutsu-inner-position-mobile;
+  }
+  .technique-orbit-item--outer {
+    animation-name: jutsu-outer-position-mobile;
+  }
+  .technique-orbit-item__symbol {
+    font-size: 34px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 11px;
+  }
+  .jutsu-preview-panel {
+    position: relative;
+    top: auto;
+    width: auto;
+    height: 170px;
+    padding: 10px;
+    transform: none;
+  }
+  .jutsu-preview-panels {
+    inset: auto 0 -190px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .jutsu-preview-panel--left {
+    left: auto;
+  }
+  .jutsu-preview-panel--right {
+    right: auto;
+  }
+  .jutsu-preview-panel strong {
+    font-size: 11px;
+  }
+}
+
+/* Keep the two rings circular around the center node. */
+.jutsu-orbit__ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: jutsu-orbit-spin 36s linear infinite;
+}
+
+.jutsu-orbit__ring--outer {
+  animation-duration: 36s;
+  z-index: 4;
+}
+
+.jutsu-orbit__ring--inner {
+  z-index: 3;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__ring,
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item__body {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132px;
+  height: 132px;
+  margin: 0;
+  animation: none;
+}
+
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);
+}
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-160px) rotate(-120deg);
+}
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(3) {
+  transform: translate(-50%, -50%) rotate(240deg) translateY(-160px) rotate(-240deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-225px) rotate(-60deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(180deg) translateY(-225px) rotate(-180deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(3) {
+  transform: translate(-50%, -50%) rotate(300deg) translateY(-225px) rotate(-300deg);
+}
+
+.technique-orbit-item__body {
+  animation: jutsu-orbit-counter 36s linear infinite;
+}
+
+.jutsu-orbit__ring--outer .technique-orbit-item__body {
+  animation-duration: 36s;
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit__ring {
+    animation-duration: 30s;
+  }
+  .jutsu-orbit__ring--outer {
+    animation-duration: 30s;
+  }
+  .technique-orbit-item {
+    width: 100px;
+    height: 100px;
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(0deg) translateY(-110px) rotate(0deg);
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(120deg) translateY(-110px) rotate(-120deg);
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(240deg) translateY(-110px) rotate(-240deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(60deg) translateY(-160px) rotate(-60deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(180deg) translateY(-160px) rotate(-180deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(300deg) translateY(-160px) rotate(-300deg);
+  }
+  .technique-orbit-item__body {
+    animation-duration: 30s;
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item__body {
+    animation-duration: 30s;
+  }
+}
+
+/* Keep both rings interactive without one full-size ring masking the other. */
+.jutsu-orbit__ring,
+.jutsu-orbit__ring--inner,
+.jutsu-orbit__ring--outer {
+  z-index: 3;
+  pointer-events: none;
+}
+
+.technique-orbit-item,
+.technique-orbit-item__body {
+  pointer-events: auto;
+}
+
+.jutsu-orbit__center {
+  z-index: 5;
+}
+
+.jutsu-preview-panels {
+  z-index: 6;
+}

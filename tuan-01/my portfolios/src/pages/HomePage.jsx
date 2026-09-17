@@ -256,10 +256,10 @@ function HomePage() {
             0902 137 976
           </a>
           <div className="social-links">
-            <a href="https://github.com/" aria-label="GitHub">
+            <a href="https://github.com/MinhTrungPham" aria-label="GitHub" target="_blank" rel="noreferrer">
               <GitBranch size={19} />
             </a>
-            <a href="https://www.linkedin.com/" aria-label="LinkedIn">
+            <a href="https://www.linkedin.com/in/minh-trung-pham/" aria-label="LinkedIn" target="_blank" rel="noreferrer">
               <Link2 size={19} />
             </a>
             <a href="#peep-report" aria-label="PEEP report">
