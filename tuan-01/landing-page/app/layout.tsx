@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Landing Page Starter",
-  description: "A flexible landing page foundation powered by Bento.",
+  title: "Naruto | The Shinobi Way",
+  description: "A cinematic fan-made field guide to the shinobi world.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

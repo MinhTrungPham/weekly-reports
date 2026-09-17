@@ -381,3 +381,1853 @@ a {
     padding: 24px 0;
   }
 }
+
+/* Naruto cinematic theme */
+:root {
+  --background: #0b0b0f;
+  --foreground: #f5f5f5;
+  --ink-muted: #9ca3af;
+  --line: #2a2a33;
+  --accent: #ff6b00;
+  --accent-strong: #ffa726;
+  --surface: #15151c;
+  --surface-raised: #1d1d26;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), "Arial Narrow", sans-serif;
+}
+
+.site-shell {
+  background: var(--background);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 11, 15, 0.82);
+  backdrop-filter: blur(16px);
+}
+
+.site-header__inner,
+.site-footer__inner {
+  min-height: 72px;
+}
+
+.brand-mark {
+  color: var(--foreground);
+  font-size: 11px;
+}
+
+.brand-mark__dot {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: none;
+  color: #0b0b0f;
+  font-family: serif;
+  font-size: 16px;
+}
+
+.site-nav {
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-nav a:hover,
+.text-link:hover,
+.ghost-link:hover {
+  color: var(--accent-strong);
+}
+
+.naruto-hero {
+  position: relative;
+  min-height: 720px;
+  overflow: hidden;
+  background: radial-gradient(circle at 70% 40%, rgba(255, 107, 0, 0.12), transparent 28%), var(--background);
+}
+
+.naruto-hero::after {
+  position: absolute;
+  right: -10%;
+  bottom: 12%;
+  width: 44vw;
+  height: 1px;
+  background: var(--accent);
+  box-shadow:
+    0 14px 0 rgba(255, 107, 0, 0.32),
+    0 -14px 0 rgba(255, 107, 0, 0.16);
+  content: "";
+  transform: rotate(-28deg);
+}
+
+.naruto-hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+  align-items: center;
+  min-height: 720px;
+  gap: 70px;
+}
+
+.naruto-hero__copy {
+  position: relative;
+  z-index: 1;
+}
+.eyebrow {
+  margin: 0 0 24px;
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.4;
+}
+
+.naruto-hero h1,
+.dark-section h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+  text-transform: uppercase;
+}
+
+.naruto-hero h1 {
+  max-width: 720px;
+  font-size: clamp(44px, 5.5vw, 80px);
+}
+
+.naruto-hero__description {
+  max-width: 430px;
+  margin: 28px 0 0;
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-top: 36px;
+}
+
+.ghost-link {
+  color: var(--ink-muted);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.ghost-link span {
+  margin-left: 8px;
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.naruto-hero__visual {
+  position: relative;
+  min-height: 570px;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 22px 22px 0 rgba(255, 107, 0, 0.12);
+}
+
+.naruto-hero__visual::before,
+.about-poster::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  content: "";
+  mask-image: linear-gradient(to bottom, black, transparent 80%);
+}
+
+.hero-seal,
+.hero-index,
+.hero-kanji {
+  position: absolute;
+}
+
+.hero-seal {
+  top: 25px;
+  left: 25px;
+  padding: 9px 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent-strong);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.hero-index {
+  right: 22px;
+  bottom: 20px;
+  color: var(--ink-muted);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+
+.hero-kanji {
+  right: 24px;
+  top: 18px;
+  color: rgba(255, 255, 255, 0.15);
+  font-family: serif;
+  font-size: 90px;
+}
+
+.dark-section {
+  position: relative;
+  padding: 110px 0;
+  border-top: 1px solid var(--line);
+  background: var(--background);
+}
+
+.split-heading,
+.section-title-row,
+.team-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 60px;
+}
+
+.dark-section h2 {
+  max-width: 680px;
+  font-size: clamp(38px, 5vw, 72px);
+}
+
+.section-lede,
+.team-intro > p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  margin-top: 70px;
+}
+
+.about-poster {
+  position: relative;
+  min-height: 430px;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  border: 1px solid var(--line);
+}
+
+.about-poster > * {
+  position: absolute;
+}
+
+.about-poster span {
+  top: 22px;
+  left: 24px;
+  color: var(--accent-strong);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.about-poster strong {
+  right: 24px;
+  bottom: 20px;
+  font-size: 42px;
+  letter-spacing: -0.06em;
+  line-height: 0.85;
+  text-align: right;
+}
+
+.about-copy {
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  align-content: center;
+  gap: 24px;
+}
+
+.about-copy p:not(.vertical-note) {
+  margin: 0 0 26px;
+  color: var(--ink-muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.vertical-note {
+  margin: 0;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  writing-mode: vertical-rl;
+}
+
+.section-title-row {
+  margin-bottom: 48px;
+}
+
+.section-title-row h2 {
+  max-width: 760px;
+}
+
+.section-mark,
+.jutsu-seal {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 50px;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+}
+
+.bento-card,
+.jutsu-card {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.bento-card::after {
+  position: absolute;
+  right: -34px;
+  bottom: -45px;
+  width: 150px;
+  height: 150px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  opacity: 0.28;
+}
+
+.bento-card--orange {
+  color: var(--accent);
+}
+.bento-card--yellow {
+  color: var(--accent-strong);
+}
+.bento-card--red {
+  color: #ef5350;
+}
+.bento-card h3,
+.bento-card p {
+  position: relative;
+  z-index: 1;
+}
+.bento-card h3 {
+  margin: 105px 0 10px;
+  color: var(--foreground);
+  font-size: 27px;
+}
+.bento-card p {
+  max-width: 290px;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.card-number {
+  color: currentColor;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+.card-symbol {
+  position: absolute;
+  right: 24px;
+  top: 14px;
+  color: currentColor;
+  font-family: serif;
+  font-size: 70px;
+  opacity: 0.72;
+}
+
+.character-grid,
+.moment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.character-card,
+.moment-card {
+  min-height: 480px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.character-card__image,
+.moment-card__image {
+  min-height: 290px;
+  background-position: center;
+  background-size: cover;
+}
+
+.character-card__content,
+.moment-card > div:last-child {
+  padding: 22px;
+}
+
+.character-card__content p,
+.moment-card p,
+.quote-card footer small,
+.jutsu-card p {
+  margin: 0 0 11px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.character-card h3,
+.moment-card h3,
+.jutsu-card h3 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+.character-card span,
+.moment-card span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.section-count {
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.team-section {
+  background: var(--surface);
+}
+.team-intro {
+  align-items: end;
+  margin-bottom: 62px;
+}
+.team-list {
+  border-top: 1px solid var(--line);
+}
+.team-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 0.8fr 1.2fr 30px;
+  align-items: center;
+  gap: 20px;
+  min-height: 86px;
+  border-bottom: 1px solid var(--line);
+}
+.team-row__mark,
+.team-row__role,
+.team-row__description {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+.team-row__name {
+  font-size: 24px;
+  font-weight: 600;
+}
+.team-row__role {
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.team-row__description {
+  font-size: 13px;
+}
+.team-row__arrow {
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.timeline {
+  margin-top: 60px;
+  border-left: 1px solid var(--accent);
+}
+.timeline-item {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 50px;
+  padding: 28px 0 28px 28px;
+  border-bottom: 1px solid var(--line);
+}
+.timeline-item > span {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+.timeline-item h3 {
+  margin: 0 0 8px;
+  font-size: 27px;
+}
+.timeline-item p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.moment-grid {
+  margin-top: 56px;
+}
+.moment-card {
+  min-height: 450px;
+}
+.moment-card__image {
+  min-height: 250px;
+}
+
+.jutsu-section {
+  background: linear-gradient(135deg, var(--background), #171116);
+}
+.jutsu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.jutsu-card {
+  min-height: 270px;
+}
+.jutsu-card > span {
+  display: block;
+  color: var(--accent);
+  font-family: serif;
+  font-size: 48px;
+}
+.jutsu-card h3 {
+  margin-top: 54px;
+  font-size: 27px;
+}
+.jutsu-card small {
+  color: var(--ink-muted);
+}
+
+.quotes-section {
+  background: var(--surface);
+}
+.quote-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.quote-card {
+  min-height: 280px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: var(--background);
+}
+.quote-mark {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 60px;
+  line-height: 0.5;
+}
+.quote-card blockquote {
+  margin: 32px 0 38px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.quote-card footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quote-card footer strong {
+  font-size: 12px;
+}
+
+.rivalry-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.rivalry-panel > div:first-child > p:last-child {
+  max-width: 410px;
+  margin: 26px 0 0;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+.rivalry-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  padding: 45px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.rivalry-lines span {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.rivalry-lines span:first-child {
+  color: var(--accent);
+}
+.rivalry-lines i {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.final-cta {
+  padding: 145px 0 170px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 0, rgba(255, 107, 0, 0.18), transparent 35%), var(--background);
+}
+.final-cta .eyebrow {
+  margin-bottom: 32px;
+}
+.final-cta h2 {
+  max-width: none;
+  font-size: clamp(76px, 15vw, 190px);
+  color: var(--accent);
+}
+.final-cta p:not(.eyebrow) {
+  margin: 28px auto 30px;
+  color: var(--ink-muted);
+}
+
+.site-footer {
+  border-color: var(--line);
+  background: var(--background);
+}
+
+@media (max-width: 760px) {
+  .container {
+    width: min(100% - 32px, 560px);
+  }
+  .site-nav {
+    display: none;
+  }
+  .naruto-hero,
+  .naruto-hero__grid {
+    min-height: auto;
+  }
+  .naruto-hero__grid {
+    grid-template-columns: 1fr;
+    gap: 60px;
+    padding-top: 74px;
+    padding-bottom: 100px;
+  }
+  .naruto-hero h1 {
+    font-size: 44px;
+  }
+  .naruto-hero__visual {
+    min-height: 440px;
+  }
+  .dark-section {
+    padding: 78px 0;
+  }
+  .split-heading,
+  .section-title-row,
+  .team-intro,
+  .rivalry-panel {
+    display: block;
+  }
+  .section-lede,
+  .team-intro > p {
+    margin-top: 28px;
+  }
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    margin-top: 42px;
+  }
+  .about-poster {
+    min-height: 350px;
+  }
+  .about-copy {
+    grid-template-columns: 25px 1fr;
+  }
+  .bento-grid,
+  .character-grid,
+  .moment-grid,
+  .jutsu-grid,
+  .quote-grid {
+    grid-template-columns: 1fr;
+  }
+  .bento-card {
+    min-height: 240px;
+  }
+  .team-row {
+    grid-template-columns: 35px 1fr 30px;
+    gap: 10px;
+  }
+  .team-row__role,
+  .team-row__description {
+    display: none;
+  }
+  .timeline-item {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .section-count,
+  .section-mark,
+  .jutsu-seal {
+    display: none;
+  }
+  .rivalry-lines {
+    margin-top: 42px;
+  }
+  .final-cta {
+    padding: 100px 0 125px;
+  }
+  .final-cta h2 {
+    font-size: 88px;
+  }
+}
+
+/* Motion system */
+@keyframes naruto-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes naruto-image-in {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes naruto-line-draw {
+  from {
+    opacity: 0;
+    transform: translateX(80px) rotate(-28deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(-28deg);
+  }
+}
+
+@keyframes naruto-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes naruto-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 0, 0);
+  }
+}
+
+.naruto-hero__copy > * {
+  opacity: 0;
+  animation: naruto-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.naruto-hero__copy > :nth-child(1) {
+  animation-delay: 100ms;
+}
+.naruto-hero__copy > :nth-child(2) {
+  animation-delay: 180ms;
+}
+.naruto-hero__copy > :nth-child(3) {
+  animation-delay: 260ms;
+}
+.naruto-hero__copy > :nth-child(4) {
+  animation-delay: 340ms;
+}
+
+.naruto-hero__visual {
+  opacity: 0;
+  animation: naruto-image-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
+}
+
+.naruto-hero::after {
+  transform-origin: right center;
+  animation: naruto-line-draw 900ms ease-out 450ms both;
+}
+
+.hero-seal {
+  animation: naruto-pulse 2.8s ease-in-out 1.2s infinite;
+}
+
+.hero-kanji {
+  animation: naruto-float 5s ease-in-out 1.2s infinite;
+}
+
+.bento-card,
+.character-card,
+.moment-card,
+.jutsu-card,
+.quote-card {
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+
+.bento-card:hover,
+.character-card:hover,
+.moment-card:hover,
+.jutsu-card:hover,
+.quote-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 167, 38, 0.65);
+}
+
+.character-card__image,
+.moment-card__image {
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 500ms ease;
+}
+
+.character-card:hover .character-card__image,
+.moment-card:hover .moment-card__image {
+  filter: saturate(1.2);
+  transform: scale(1.05);
+}
+
+.team-row {
+  transition:
+    padding 260ms ease,
+    background-color 260ms ease;
+}
+
+.team-row:hover {
+  padding-inline: 14px;
+  background: rgba(255, 107, 0, 0.06);
+}
+
+.team-row__arrow {
+  transition:
+    transform 260ms ease,
+    color 260ms ease;
+}
+
+.team-row:hover .team-row__arrow {
+  color: var(--accent-strong);
+  transform: translate(4px, -4px);
+}
+
+.timeline-item {
+  position: relative;
+  transition:
+    padding-left 260ms ease,
+    background-color 260ms ease;
+}
+
+.timeline-item::before {
+  position: absolute;
+  top: 34px;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.timeline-item:hover {
+  padding-left: 38px;
+  background: linear-gradient(90deg, rgba(255, 107, 0, 0.08), transparent 70%);
+}
+
+.timeline-item:hover::before {
+  box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.12);
+  transform: scale(1.2);
+}
+
+.final-cta h2 {
+  transition:
+    color 300ms ease,
+    text-shadow 300ms ease;
+}
+
+.final-cta:hover h2 {
+  color: #ffc15c;
+  text-shadow: 0 0 34px rgba(255, 107, 0, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Editorial layouts for techniques and quotes */
+.jutsu-section {
+  background: radial-gradient(circle at 80% 20%, rgba(255, 107, 0, 0.11), transparent 28%), #0b0b0f;
+}
+
+.technique-list {
+  border-top: 1px solid var(--line);
+}
+
+.technique-item {
+  display: grid;
+  grid-template-columns: 64px 120px 1fr 38px;
+  align-items: center;
+  gap: 28px;
+  min-height: 142px;
+  border-bottom: 1px solid var(--line);
+  transition:
+    padding 260ms ease,
+    background-color 260ms ease;
+}
+
+.technique-item:hover {
+  padding-inline: 22px;
+  background: linear-gradient(90deg, rgba(255, 107, 0, 0.1), transparent 75%);
+}
+
+.technique-item__index {
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.technique-item__symbol {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 72px;
+  line-height: 1;
+  transition:
+    color 260ms ease,
+    transform 260ms ease;
+}
+
+.technique-item:hover .technique-item__symbol {
+  color: var(--accent-strong);
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.technique-item__content p {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.technique-item__content h3 {
+  display: inline-block;
+  margin: 0 14px 0 0;
+  font-size: clamp(28px, 4vw, 46px);
+  letter-spacing: -0.04em;
+}
+
+.technique-item__content small {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.technique-item__arrow {
+  color: var(--accent);
+  font-size: 24px;
+  transition: transform 260ms ease;
+}
+
+.technique-item:hover .technique-item__arrow {
+  transform: translate(5px, -5px);
+}
+
+.quotes-section {
+  background: #15151c;
+}
+
+.quote-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 90px;
+  align-items: stretch;
+}
+
+.quote-feature {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 390px;
+  padding: 34px 38px;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.16), transparent 58%);
+}
+
+.quote-mark {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 86px;
+  line-height: 0.45;
+}
+
+.quote-feature blockquote {
+  max-width: 680px;
+  margin: 44px 0 60px;
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.quote-feature footer,
+.quote-row footer {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quote-feature footer strong,
+.quote-row footer strong {
+  font-size: 12px;
+}
+
+.quote-feature footer small,
+.quote-row footer small {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.quote-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.quote-row {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 18px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.quote-row:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.quote-row__index {
+  padding-top: 4px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.quote-row blockquote {
+  margin: 0 0 22px;
+  color: var(--foreground);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+@media (max-width: 760px) {
+  .technique-item {
+    grid-template-columns: 36px 68px 1fr 20px;
+    gap: 12px;
+    min-height: 118px;
+  }
+
+  .technique-item:hover {
+    padding-inline: 10px;
+  }
+
+  .technique-item__symbol {
+    font-size: 48px;
+  }
+
+  .technique-item__content h3 {
+    font-size: 25px;
+  }
+
+  .technique-item__content small {
+    display: block;
+    margin-top: 5px;
+  }
+
+  .quote-layout {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .quote-feature {
+    min-height: 330px;
+    padding: 28px 24px;
+  }
+
+  .quote-feature blockquote {
+    margin: 34px 0 44px;
+    font-size: 38px;
+  }
+}
+
+/* Jutsu orbit */
+@keyframes jutsu-orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jutsu-orbit-counter {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.jutsu-orbit-stage {
+  display: grid;
+  min-height: 620px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.jutsu-orbit {
+  position: relative;
+  width: min(620px, 90vw);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 107, 0, 0.13) 0 15%, transparent 15.5% 48%, rgba(255, 107, 0, 0.06) 48.5% 49%, transparent 49.5%),
+    radial-gradient(circle, rgba(255, 167, 38, 0.07), transparent 60%);
+  box-shadow:
+    0 0 90px rgba(255, 107, 0, 0.1),
+    inset 0 0 80px rgba(255, 107, 0, 0.06);
+}
+
+.jutsu-orbit::before,
+.jutsu-orbit::after {
+  position: absolute;
+  inset: 8%;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  content: "";
+}
+
+.jutsu-orbit::after {
+  inset: 24%;
+  border-style: solid;
+  border-color: rgba(255, 107, 0, 0.2);
+}
+
+.jutsu-orbit__track {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: jutsu-orbit-spin 28s linear infinite;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__track,
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item__body {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 178px;
+  height: 178px;
+  margin: -89px;
+}
+
+.technique-orbit-item:nth-child(1) {
+  transform: rotate(0deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(2) {
+  transform: rotate(90deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(3) {
+  transform: rotate(180deg) translateY(-238px);
+}
+.technique-orbit-item:nth-child(4) {
+  transform: rotate(270deg) translateY(-238px);
+}
+
+.technique-orbit-item__body {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 1px solid rgba(255, 167, 38, 0.34);
+  border-radius: 50%;
+  background: rgba(21, 21, 28, 0.92);
+  text-align: center;
+  animation: jutsu-orbit-counter 28s linear infinite;
+  cursor: pointer;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    background-color 240ms ease;
+}
+
+.technique-orbit-item:hover .technique-orbit-item__body {
+  z-index: 10;
+  border-color: var(--accent);
+  background: rgba(11, 11, 15, 0.98);
+  box-shadow:
+    0 0 0 8px rgba(255, 107, 0, 0.1),
+    0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.technique-orbit-item__index {
+  position: absolute;
+  top: 18px;
+  color: var(--ink-muted);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.technique-orbit-item__symbol {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 52px;
+  line-height: 1;
+}
+
+.technique-orbit-item h3 {
+  margin: 6px 0 4px;
+  color: var(--foreground);
+  font-size: 17px;
+}
+
+.technique-orbit-item small {
+  color: var(--ink-muted);
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.technique-orbit-item__preview {
+  position: absolute;
+  right: -112px;
+  bottom: 8px;
+  width: 150px;
+  height: 96px;
+  overflow: hidden;
+  border: 2px solid var(--accent);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.75) translateY(12px);
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease;
+}
+
+.technique-orbit-item__preview::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), transparent 65%);
+  content: "";
+}
+
+.technique-orbit-item:hover .technique-orbit-item__preview {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.jutsu-orbit__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: 150px;
+  height: 150px;
+  place-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: #0b0b0f;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.jutsu-orbit__center span {
+  color: var(--accent);
+  font-family: serif;
+  font-size: 58px;
+  line-height: 0.9;
+}
+
+.jutsu-orbit__center small {
+  color: var(--ink-muted);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit-stage {
+    min-height: 440px;
+  }
+
+  .jutsu-orbit {
+    width: min(390px, 96vw);
+  }
+
+  .technique-orbit-item {
+    width: 124px;
+    height: 124px;
+    margin: -62px;
+  }
+
+  .technique-orbit-item:nth-child(1) {
+    transform: rotate(0deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(2) {
+    transform: rotate(90deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(3) {
+    transform: rotate(180deg) translateY(-145px);
+  }
+  .technique-orbit-item:nth-child(4) {
+    transform: rotate(270deg) translateY(-145px);
+  }
+
+  .technique-orbit-item__body {
+    padding: 10px;
+  }
+  .technique-orbit-item__index {
+    top: 12px;
+  }
+  .technique-orbit-item__symbol {
+    font-size: 38px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 13px;
+  }
+  .technique-orbit-item small {
+    display: none;
+  }
+  .technique-orbit-item__preview {
+    right: -86px;
+    width: 112px;
+    height: 72px;
+  }
+  .jutsu-orbit__center {
+    width: 100px;
+    height: 100px;
+  }
+  .jutsu-orbit__center span {
+    font-size: 40px;
+  }
+}
+
+/* Two-ring orbit: three inner techniques and three outer techniques */
+.jutsu-orbit-stage {
+  min-height: 540px;
+}
+
+.jutsu-orbit {
+  width: min(520px, 78vw);
+}
+
+.jutsu-orbit__track {
+  animation-duration: 32s;
+}
+
+.technique-orbit-item {
+  width: 126px;
+  height: 126px;
+  margin: -63px;
+}
+
+.technique-orbit-item:nth-child(1) {
+  transform: rotate(0deg) translateY(-130px) rotate(0deg);
+}
+.technique-orbit-item:nth-child(2) {
+  transform: rotate(120deg) translateY(-130px) rotate(-120deg);
+}
+.technique-orbit-item:nth-child(3) {
+  transform: rotate(240deg) translateY(-130px) rotate(-240deg);
+}
+.technique-orbit-item:nth-child(4) {
+  transform: rotate(60deg) translateY(-210px) rotate(-60deg);
+}
+.technique-orbit-item:nth-child(5) {
+  transform: rotate(180deg) translateY(-210px) rotate(-180deg);
+}
+.technique-orbit-item:nth-child(6) {
+  transform: rotate(300deg) translateY(-210px) rotate(-300deg);
+}
+
+.technique-orbit-item__body {
+  animation-duration: 32s;
+}
+
+.technique-orbit-item__symbol {
+  font-size: 42px;
+}
+
+.technique-orbit-item h3 {
+  font-size: 15px;
+}
+
+.technique-orbit-item__preview {
+  position: fixed;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  z-index: 20;
+  width: 220px;
+  height: 280px;
+  border-width: 1px;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.82);
+}
+
+.technique-orbit-item:nth-child(-n + 3) .technique-orbit-item__preview {
+  left: 5vw;
+}
+
+.technique-orbit-item:nth-child(n + 4) .technique-orbit-item__preview {
+  right: 5vw;
+}
+
+.technique-orbit-item:hover .technique-orbit-item__preview {
+  transform: translateY(-50%) scale(1);
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit-stage {
+    min-height: 410px;
+  }
+
+  .jutsu-orbit {
+    width: min(360px, 92vw);
+  }
+
+  .technique-orbit-item {
+    width: 98px;
+    height: 98px;
+    margin: -49px;
+  }
+
+  .technique-orbit-item:nth-child(1) {
+    transform: rotate(0deg) translateY(-92px) rotate(0deg);
+  }
+  .technique-orbit-item:nth-child(2) {
+    transform: rotate(120deg) translateY(-92px) rotate(-120deg);
+  }
+  .technique-orbit-item:nth-child(3) {
+    transform: rotate(240deg) translateY(-92px) rotate(-240deg);
+  }
+  .technique-orbit-item:nth-child(4) {
+    transform: rotate(60deg) translateY(-145px) rotate(-60deg);
+  }
+  .technique-orbit-item:nth-child(5) {
+    transform: rotate(180deg) translateY(-145px) rotate(-180deg);
+  }
+  .technique-orbit-item:nth-child(6) {
+    transform: rotate(300deg) translateY(-145px) rotate(-300deg);
+  }
+
+  .technique-orbit-item__symbol {
+    font-size: 31px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 11px;
+  }
+  .technique-orbit-item__index {
+    top: 10px;
+    font-size: 8px;
+  }
+  .technique-orbit-item__preview {
+    width: 105px;
+    height: 125px;
+  }
+  .technique-orbit-item:nth-child(-n + 3) .technique-orbit-item__preview {
+    left: 2vw;
+  }
+  .technique-orbit-item:nth-child(n + 4) .technique-orbit-item__preview {
+    right: 2vw;
+  }
+  .jutsu-orbit__center {
+    width: 86px;
+    height: 86px;
+  }
+  .jutsu-orbit__center span {
+    font-size: 34px;
+  }
+}
+
+/* Upright two-ring orbit with shared side previews */
+@keyframes jutsu-inner-position {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, -145px);
+  }
+  33% {
+    transform: translate(-50%, -50%) translate(126px, 73px);
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(-126px, 73px);
+  }
+}
+
+@keyframes jutsu-outer-position {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, -245px);
+  }
+  33% {
+    transform: translate(-50%, -50%) translate(212px, 123px);
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(-212px, 123px);
+  }
+}
+
+.jutsu-orbit-stage {
+  min-height: 640px;
+  overflow: visible;
+}
+
+.jutsu-orbit {
+  width: min(600px, 82vw);
+}
+
+.jutsu-orbit__track {
+  animation: none;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__track {
+  animation-play-state: running;
+}
+
+.technique-orbit-item {
+  width: 132px;
+  height: 132px;
+  margin: 0;
+  animation-duration: 24s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-play-state: running;
+}
+
+.technique-orbit-item--inner {
+  animation-name: jutsu-inner-position;
+}
+.technique-orbit-item--outer {
+  animation-name: jutsu-outer-position;
+}
+.technique-orbit-item:nth-child(2),
+.technique-orbit-item:nth-child(5) {
+  animation-delay: -8s;
+}
+.technique-orbit-item:nth-child(3),
+.technique-orbit-item:nth-child(6) {
+  animation-delay: -16s;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item__body {
+  animation: none;
+  transform: none;
+}
+
+.technique-orbit-item__symbol {
+  font-size: 48px;
+}
+
+.technique-orbit-item h3 {
+  margin: 8px 0 0;
+  font-size: 16px;
+}
+
+.jutsu-preview-panels {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.jutsu-preview-panels.is-visible {
+  opacity: 1;
+}
+
+.jutsu-preview-panel {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  width: 345px;
+  height: 450px;
+  flex-direction: column;
+  justify-content: end;
+  padding: 16px;
+  border: 1px solid var(--accent);
+  background-color: var(--surface);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  transform: translateY(-50%);
+}
+
+.jutsu-preview-panel::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(11, 11, 15, 0.95));
+  content: "";
+}
+
+.jutsu-preview-panel > * {
+  position: relative;
+  z-index: 1;
+}
+.jutsu-preview-panel span {
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.jutsu-preview-panel strong {
+  margin-top: 6px;
+  font-size: 15px;
+}
+.jutsu-preview-panel--left {
+  left: -395px;
+}
+.jutsu-preview-panel--right {
+  right: -395px;
+}
+
+@media (max-width: 760px) {
+  @keyframes jutsu-inner-position-mobile {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translate(0, -100px);
+    }
+    33% {
+      transform: translate(-50%, -50%) translate(87px, 50px);
+    }
+    66% {
+      transform: translate(-50%, -50%) translate(-87px, 50px);
+    }
+  }
+
+  @keyframes jutsu-outer-position-mobile {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translate(0, -170px);
+    }
+    33% {
+      transform: translate(-50%, -50%) translate(147px, 85px);
+    }
+    66% {
+      transform: translate(-50%, -50%) translate(-147px, 85px);
+    }
+  }
+
+  .jutsu-orbit-stage {
+    min-height: 450px;
+  }
+  .jutsu-orbit {
+    width: min(390px, 94vw);
+  }
+  .technique-orbit-item {
+    width: 100px;
+    height: 100px;
+  }
+  .technique-orbit-item--inner {
+    animation-name: jutsu-inner-position-mobile;
+  }
+  .technique-orbit-item--outer {
+    animation-name: jutsu-outer-position-mobile;
+  }
+  .technique-orbit-item__symbol {
+    font-size: 34px;
+  }
+  .technique-orbit-item h3 {
+    font-size: 11px;
+  }
+  .jutsu-preview-panel {
+    width: 210px;
+    height: 270px;
+    padding: 10px;
+  }
+  .jutsu-preview-panel--left {
+    left: -220px;
+  }
+  .jutsu-preview-panel--right {
+    right: -220px;
+  }
+  .jutsu-preview-panel strong {
+    font-size: 11px;
+  }
+}
+
+/* Keep the two rings circular around the center node. */
+.jutsu-orbit__ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: jutsu-orbit-spin 36s linear infinite;
+}
+
+.jutsu-orbit__ring--outer {
+  animation-duration: 36s;
+  z-index: 4;
+}
+
+.jutsu-orbit__ring--inner {
+  z-index: 3;
+}
+
+.jutsu-orbit:has(.technique-orbit-item:hover) .jutsu-orbit__ring,
+.jutsu-orbit:has(.technique-orbit-item:hover) .technique-orbit-item__body {
+  animation-play-state: paused;
+}
+
+.technique-orbit-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132px;
+  height: 132px;
+  margin: 0;
+  animation: none;
+}
+
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);
+}
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-160px) rotate(-120deg);
+}
+.jutsu-orbit__ring--inner .technique-orbit-item:nth-child(3) {
+  transform: translate(-50%, -50%) rotate(240deg) translateY(-160px) rotate(-240deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-225px) rotate(-60deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(180deg) translateY(-225px) rotate(-180deg);
+}
+.jutsu-orbit__ring--outer .technique-orbit-item:nth-child(3) {
+  transform: translate(-50%, -50%) rotate(300deg) translateY(-225px) rotate(-300deg);
+}
+
+.technique-orbit-item__body {
+  animation: jutsu-orbit-counter 36s linear infinite;
+}
+
+.jutsu-orbit__ring--outer .technique-orbit-item__body {
+  animation-duration: 36s;
+}
+
+@media (max-width: 760px) {
+  .jutsu-orbit__ring {
+    animation-duration: 30s;
+  }
+  .jutsu-orbit__ring--outer {
+    animation-duration: 30s;
+  }
+  .technique-orbit-item {
+    width: 100px;
+    height: 100px;
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(0deg) translateY(-110px) rotate(0deg);
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(120deg) translateY(-110px) rotate(-120deg);
+  }
+  .jutsu-orbit__ring--inner .technique-orbit-item:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(240deg) translateY(-110px) rotate(-240deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(60deg) translateY(-160px) rotate(-60deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(180deg) translateY(-160px) rotate(-180deg);
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(300deg) translateY(-160px) rotate(-300deg);
+  }
+  .technique-orbit-item__body {
+    animation-duration: 30s;
+  }
+  .jutsu-orbit__ring--outer .technique-orbit-item__body {
+    animation-duration: 30s;
+  }
+}
+
+/* Keep both rings interactive without one full-size ring masking the other. */
+.jutsu-orbit__ring,
+.jutsu-orbit__ring--inner,
+.jutsu-orbit__ring--outer {
+  z-index: 3;
+  pointer-events: none;
+}
+
+.technique-orbit-item,
+.technique-orbit-item__body {
+  pointer-events: auto;
+}
+
+.jutsu-orbit__center {
+  z-index: 5;
+}
+
+.jutsu-preview-panels {
+  z-index: 6;
+}

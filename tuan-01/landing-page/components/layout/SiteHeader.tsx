@@ -7,16 +7,17 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Container className="site-header__inner">
-        <a className="brand-mark" href="#top" aria-label="Trang chủ">
-          <span className="brand-mark__dot" />
-          <span>PROJECT NAME</span>
+        <a className="brand-mark" href="#top" aria-label="Naruto - The Shinobi Way">
+          <span className="brand-mark__dot">忍</span>
+          <span>NARUTO / 忍道</span>
         </a>
         <nav className="site-nav" aria-label="Điều hướng chính">
-          <a href="#story">Câu chuyện</a>
-          <a href="#features">Điểm nổi bật</a>
-          <a href="#contact">Liên hệ</a>
+          <a href="#about">About</a>
+          <a href="#characters">Characters</a>
+          <a href="#journey">Journey</a>
+          <a href="#jutsu">Jutsu</a>
         </nav>
-        <Button label="Bắt đầu" onPress={() => {}} kind="solid" hierarchy="primary" size="small" />
+        <Button label="Explore" onPress={() => {}} kind="solid" hierarchy="primary" size="small" />
       </Container>
     </header>
   );
