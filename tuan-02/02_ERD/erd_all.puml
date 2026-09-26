@@ -1,0 +1,548 @@
+@startuml erd_all
+
+title ERD Toan He Thong (Sprint 0)
+hide circle
+skinparam linetype ortho
+
+
+title Domain A — Authentication & RBAC
+
+
+' =========================================================
+' USERS
+' =========================================================
+
+entity users {
+    * id           : BIGINT <<PK>>
+    --
+    * username     : VARCHAR(100) <<UK>>
+    * email        : VARCHAR(255) <<UK>>
+    * password_hash: VARCHAR(255)
+    * full_name    : VARCHAR(255)
+    * status       : VARCHAR(20)
+    last_login_at  : TIMESTAMP
+    --
+    * created_at   : TIMESTAMP
+    * created_by   : BIGINT
+    * updated_at   : TIMESTAMP
+    * updated_by   : BIGINT
+}
+
+note right of users
+  status: ACTIVE | LOCKED | INACTIVE
+  password_hash: lưu BCrypt/Argon2,
+  không bao giờ lưu plain-text.
+  last_login_at: cập nhật mỗi lần
+  đăng nhập thành công.
+end note
+
+' =========================================================
+' ROLES
+' =========================================================
+
+entity roles {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of roles
+  Các code chuẩn:
+  ADMIN, WH_MANAGER, SUPERVISOR,
+  RECEIVER, PICKER, INSPECTOR, VIEWER
+end note
+
+' =========================================================
+' PERMISSIONS
+' =========================================================
+
+entity permissions {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(100) <<UK>>
+    * module      : VARCHAR(50)
+    * action      : VARCHAR(50)
+    description   : VARCHAR(255)
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of permissions
+  Ví dụ:
+  code=INBOUND.RECEIVE, module=INBOUND, action=RECEIVE
+  code=INVENTORY.ADJUST, module=INVENTORY, action=ADJUST
+  code=LEDGER.VIEW, module=LEDGER, action=VIEW
+  code=USER.MANAGE, module=USER, action=MANAGE
+end note
+
+' =========================================================
+' ROLE_PERMISSIONS  (N-N)
+' =========================================================
+
+entity role_permissions {
+    * role_id       : BIGINT <<PK, FK>>
+    * permission_id : BIGINT <<PK, FK>>
+    --
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+}
+
+' =========================================================
+' USER_ROLES  (N-N, scoped by warehouse)
+' =========================================================
+
+entity user_roles {
+    * user_id       : BIGINT <<PK, FK>>
+    * role_id       : BIGINT <<PK, FK>>
+    * warehouse_id  : BIGINT <<PK, FK nullable>>
+    --
+    * is_active     : BOOLEAN
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
+}
+
+note right of user_roles
+  warehouse_id NULL = quyền toàn hệ thống
+  (dùng cho ADMIN).
+  Cùng user có thể có role khác nhau
+  ở từng kho khác nhau.
+  PK composite: (user_id, role_id, warehouse_id)
+  — NULL warehouse_id tham gia composite key
+  phải xử lý bằng partial unique index.
+end note
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' Role - Permissions
+roles        ||--o{ role_permissions  : "role_id"
+permissions  ||--o{ role_permissions  : "permission_id"
+
+' User - Roles (warehouse-scoped)
+users        ||--o{ user_roles        : "user_id"
+roles        ||--o{ user_roles        : "role_id"
+
+' user_roles.warehouse_id -> warehouses (domain B)
+' Ghi chú FK ngoại domain:
+' user_roles.warehouse_id FK → warehouses.id (domain B)
+
+
+title Domain B - Warehouse Structure
+
+
+' =========================================================
+' WAREHOUSES
+' =========================================================
+
+entity warehouses {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(20) <<UK>>
+    * name : VARCHAR(100)
+    address : VARCHAR(255)
+    * status : VARCHAR(20)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tu tham chieu)
+' =========================================================
+
+entity locations {
+    * id : BIGINT <<PK>>
+    --
+    * warehouse_id : BIGINT <<FK>>
+    parent_id : BIGINT <<FK>>
+    * location_type : VARCHAR(10)
+    * code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(100)
+    * full_path : VARCHAR(255)
+    * purpose : VARCHAR(20)
+    max_weight : DECIMAL(18,4)
+    max_volume : DECIMAL(18,4)
+    * is_pickable : BOOLEAN
+    * is_active : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' Warehouse - Location
+warehouses ||--o{ locations : "warehouse_id"
+
+' Location - Location cha (Zone -> Aisle -> Rack -> Bin)
+locations |o--o{ locations : "parent_id"
+
+
+title Domain C - Product & Supplier
+
+
+' =========================================================
+' UOMS
+' =========================================================
+
+entity uoms {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(20) <<UK>>
+    * name : VARCHAR(100)
+    description : VARCHAR(255)
+    * is_active : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKUS
+' =========================================================
+
+entity skus {
+    * id : BIGINT <<PK>>
+    --
+    * sku_code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(255)
+    * base_uom_id : BIGINT <<FK>>
+    category : VARCHAR(100)
+    weight : DECIMAL(18,4)
+    volume : DECIMAL(18,4)
+    * status : VARCHAR(20)
+    * is_lot_tracked : BOOLEAN
+    * is_serial_tracked : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU UOM CONVERSIONS
+' =========================================================
+
+entity sku_uom_conversions {
+    * id : BIGINT <<PK>>
+    --
+    * sku_id : BIGINT <<FK>>
+    * uom_id : BIGINT <<FK>>
+    * factor_to_base : DECIMAL(18,4)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU BARCODES
+' =========================================================
+
+entity sku_barcodes {
+    * id : BIGINT <<PK>>
+    --
+    * sku_id : BIGINT <<FK>>
+    * uom_id : BIGINT <<FK>>
+    * barcode : VARCHAR(100) <<UK>>
+    * barcode_type : VARCHAR(30)
+    * is_primary : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SUPPLIERS
+' =========================================================
+
+entity suppliers {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(255)
+    tax_code : VARCHAR(50)
+    contact : VARCHAR(255)
+    * status : VARCHAR(20)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU SUPPLIERS
+' =========================================================
+
+entity sku_suppliers {
+    * sku_id : BIGINT <<PK, FK>>
+    * supplier_id : BIGINT <<PK, FK>>
+    --
+    supplier_sku_code : VARCHAR(100)
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' SKU - Base UOM
+uoms ||--o{ skus : "base_uom_id"
+
+' SKU - UOM Conversion
+skus ||--o{ sku_uom_conversions : "sku_id"
+uoms ||--o{ sku_uom_conversions : "uom_id"
+
+' SKU - Barcode
+skus ||--o{ sku_barcodes : "sku_id"
+uoms ||--o{ sku_barcodes : "uom_id"
+
+' SKU - Supplier
+skus ||--o{ sku_suppliers : "sku_id"
+suppliers ||--o{ sku_suppliers : "supplier_id"
+
+' ERD Domain D - Inventory Model
+' Sprint 0 - Mini-WMS (FreshLink Produce)
+' ĐỒNG BỘ với domain C: PK/FK = BIGINT (không theo UUID trong Quy ước chung
+' vì domain C đã triển khai thực tế bằng BIGINT - nhóm cần cập nhật lại
+' tài liệu Quy ước chung cho khớp thực tế)
+' Phụ thuộc: domain B (warehouses, locations), domain C (skus - đã có)
+
+
+entity inventory {
+  * id : BIGINT <<PK>>
+  --
+  * warehouse_id : BIGINT <<FK>>
+  * location_id : BIGINT <<FK>>
+  * sku_id : BIGINT <<FK>>
+  lot_no : VARCHAR(50)
+  expiry_date : DATE
+  --
+  * qty_on_hand : DECIMAL(18,4)
+  * qty_reserved : DECIMAL(18,4)
+  qty_available : DECIMAL(18,4) <<generated>>
+  --
+  * version : INT
+  --
+  * created_at : TIMESTAMP
+  * created_by : BIGINT
+  * updated_at : TIMESTAMP
+  * updated_by : BIGINT
+}
+
+note top of inventory
+  INDEX (khuyến nghị):
+  - UNIQUE (location_id, sku_id, lot_no)
+    -> chống trùng dòng tồn cùng vị trí/lô
+  - INDEX (sku_id)
+    -> truy vấn "SKU này còn ở đâu, tổng bao nhiêu"
+  - INDEX (warehouse_id, sku_id)
+    -> truy vấn tồn theo kho, dùng cho Viewer/báo cáo
+  - INDEX (expiry_date) WHERE expiry_date IS NOT NULL
+    -> hỗ trợ truy vấn FEFO (lấy lô hết hạn trước)
+
+  CHECK constraints:
+  - qty_on_hand  >= 0
+  - qty_reserved >= 0
+  - qty_reserved <= qty_on_hand
+
+  qty_available = qty_on_hand - qty_reserved
+  (generated column hoặc VIEW, KHÔNG cho ghi trực tiếp)
+
+  Reserve ở CẤP LOCATION: qty_reserved nằm ngay trong dòng
+  theo location_id -> Picker biết đúng vị trí ngay khi
+  được giao Pick Task.
+
+  version: optimistic locking, tăng +1 mỗi lần UPDATE,
+  kèm điều kiện WHERE version = :old_version khi ghi.
+end note
+
+' ---- Tham chiếu ngoài domain D (domain B chưa có - vẫn là giả định) ----
+
+
+
+
+title Domain E — Stock Ledger & Movement
+
+
+' =========================================================
+' MOVEMENT_TYPES  (lookup / master)
+' =========================================================
+
+entity movement_types {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    * sign        : SMALLINT
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of movement_types
+  sign: +1 (nhập / tăng tồn)
+        -1 (xuất / giảm tồn)
+  Các code chuẩn:
+  RECEIPT        (+1)
+  PUTAWAY_OUT    (-1)
+  PUTAWAY_IN     (+1)
+  PICK           (-1)
+  SHIP           (-1)
+  TRANSFER_OUT   (-1)
+  TRANSFER_IN    (+1)
+  ADJUST_IN      (+1)
+  ADJUST_OUT     (-1)
+  REVERSAL       (đảo dấu của dòng gốc)
+end note
+
+' =========================================================
+' REFERENCE_TYPES  (lookup / master)
+' =========================================================
+
+entity reference_types {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of reference_types
+  Các code chuẩn (Sprint 0 — chứng từ
+  chưa thiết kế bảng riêng):
+  RECEIPT, SHIPMENT, TRANSFER,
+  ADJUSTMENT, CYCLE_COUNT, REVERSAL
+end note
+
+' =========================================================
+' STOCK_LEDGER  (append-only, immutable)
+' =========================================================
+
+entity stock_ledger {
+    * id               : BIGINT <<PK, auto-increment>>
+    --
+    * warehouse_id     : BIGINT <<FK (domain B)>>
+    * location_id      : BIGINT <<FK (domain B)>>
+    * sku_id           : BIGINT <<FK (domain C)>>
+    lot_no             : VARCHAR(50)
+    --
+    * movement_type_id : BIGINT <<FK>>
+    * qty_change       : DECIMAL(18,4)
+    * qty_before       : DECIMAL(18,4)
+    * qty_after        : DECIMAL(18,4)
+    --
+    * reference_type_id: BIGINT <<FK>>
+    reference_id       : VARCHAR(100)
+    --
+    reversal_of_id     : BIGINT <<FK self>>
+    note               : VARCHAR(500)
+    --
+    * created_at       : TIMESTAMP
+    * created_by       : BIGINT <<FK (domain A)>>
+}
+
+note top of stock_ledger
+  APPEND-ONLY: KHÔNG bao giờ UPDATE hoặc DELETE.
+  Sai sót sửa bằng cách INSERT dòng REVERSAL mới.
+
+  qty_change có dấu: > 0 là nhập, < 0 là xuất.
+  qty_before / qty_after: on_hand trước/sau tại
+  (location_id, sku_id, lot_no) — hỗ trợ đối soát.
+
+  reversal_of_id trỏ về stock_ledger.id bị đảo.
+  Khi insert REVERSAL: qty_change = -1 * qty_change gốc.
+
+  INDEX (khuyến nghị):
+  - INDEX (warehouse_id, sku_id, created_at)
+    → báo cáo tồn theo kho / SKU
+  - INDEX (location_id, sku_id, lot_no)
+    → truy vấn ledger theo vị trí / lô
+  - INDEX (reference_type_id, reference_id)
+    → tra cứu ledger theo chứng từ gốc
+  - INDEX (reversal_of_id) WHERE reversal_of_id IS NOT NULL
+    → tìm nhanh bút toán đảo
+end note
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+movement_types  ||--o{ stock_ledger : "movement_type_id"
+reference_types ||--o{ stock_ledger : "reference_type_id"
+stock_ledger    |o--o| stock_ledger : "reversal_of_id (self)"
+
+' FK ngoại domain (ghi chú):
+' stock_ledger.warehouse_id  → warehouses.id (domain B)
+' stock_ledger.location_id   → locations.id  (domain B)
+' stock_ledger.sku_id        → skus.id        (domain C)
+' stock_ledger.created_by    → users.id       (domain A)
+' inventory.qty_on_hand / qty_reserved cập nhật
+'   đồng bộ với mỗi dòng stock_ledger (domain D)
+
+
+' =========================================================
+' CROSS-DOMAIN RELATIONSHIPS (Tich hop - Muc 6)
+' =========================================================
+
+' Domain A <-> Domain B
+warehouses ||--o{ user_roles : "warehouse_id"
+
+' Domain A <-> Domain E
+users ||--o{ stock_ledger : "created_by"
+
+' Domain B <-> Domain D
+warehouses ||--o{ inventory : "warehouse_id"
+locations ||--o{ inventory : "location_id"
+
+' Domain B <-> Domain E
+warehouses ||--o{ stock_ledger : "warehouse_id"
+locations ||--o{ stock_ledger : "location_id"
+
+' Domain C <-> Domain D
+skus ||--o{ inventory : "sku_id"
+
+' Domain C <-> Domain E
+skus ||--o{ stock_ledger : "sku_id"
+
+@enduml

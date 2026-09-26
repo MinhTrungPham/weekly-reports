@@ -1,0 +1,61 @@
+@startuml ERD_Domain_B_Warehouse_Structure
+
+title Domain B - Warehouse Structure
+
+hide circle
+skinparam linetype ortho
+
+' =========================================================
+' WAREHOUSES
+' =========================================================
+
+entity warehouses {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(20) <<UK>>
+    * name : VARCHAR(100)
+    address : VARCHAR(255)
+    * status : VARCHAR(20)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tu tham chieu)
+' =========================================================
+
+entity locations {
+    * id : BIGINT <<PK>>
+    --
+    * warehouse_id : BIGINT <<FK>>
+    parent_id : BIGINT <<FK>>
+    * location_type : VARCHAR(10)
+    * code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(100)
+    * full_path : VARCHAR(255)
+    * purpose : VARCHAR(20)
+    max_weight : DECIMAL(18,4)
+    max_volume : DECIMAL(18,4)
+    * is_pickable : BOOLEAN
+    * is_active : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' Warehouse - Location
+warehouses ||--o{ locations : "warehouse_id"
+
+' Location - Location cha (Zone -> Aisle -> Rack -> Bin)
+locations |o--o{ locations : "parent_id"
+
+@enduml

@@ -1,0 +1,204 @@
+@startuml Mini_WMS_Business_Flow
+
+title Mini-WMS (Warehouse Management System) - Business Flow theo Role
+
+start
+
+' =========================================================
+' ADMIN
+' =========================================================
+
+partition "ADMIN" {
+    :Quản lý User;
+    :Tạo / cập nhật tài khoản;
+    :Gán Role và Permission;
+    :Maintain hệ thống;
+}
+
+' =========================================================
+' MANAGER - WAREHOUSE SETUP
+' =========================================================
+
+partition "MANAGER" {
+    :Tạo Warehouse;
+    :Cập nhật thông tin Warehouse;
+    :Tạo / cập nhật Location;
+    :Thiết lập cấu trúc vị trí trong Warehouse;
+}
+
+' =========================================================
+' INBOUND
+' =========================================================
+
+partition "SUPERVISOR" {
+    :Nhận thông tin hàng cần nhập;
+    :Điều phối Task cho Receiver;
+}
+
+partition "RECEIVER" {
+    :Tiếp nhận hàng từ Supplier;
+    :Kiểm tra SKU\n(Stock Keeping Unit);
+    :Kiểm tra số lượng;
+    :Kiểm tra UOM\n(Unit of Measure);
+    :Kiểm tra Lot / Expiry nếu có;
+}
+
+if (Thông tin hợp lệ?) then (Có)
+
+    partition "RECEIVER" {
+        :Xác nhận nhận hàng;
+        :Đưa hàng vào Receiving Location;
+        :Thực hiện cất hàng;
+        :Chuyển hàng vào Storage BIN\n(Storage Bin);
+    }
+
+else (Không)
+
+    partition "RECEIVER" {
+        :Ghi nhận hàng có vấn đề;
+        :Báo Supervisor;
+    }
+
+    partition "SUPERVISOR" {
+        :Xử lý / điều phối Exception;
+    }
+
+endif
+
+' =========================================================
+' INVENTORY VIEW
+' =========================================================
+
+partition "VIEWER" {
+    :Mở màn hình Inventory;
+    :Tra cứu SKU\n(Stock Keeping Unit);
+    :Xem số lượng tồn;
+    :Kiểm tra số lượng có thể sử dụng\nđể phục vụ công việc;
+}
+
+' =========================================================
+' OUTBOUND
+' =========================================================
+
+partition "SUPERVISOR" {
+    :Tiếp nhận yêu cầu xuất hàng;
+    :Kiểm tra công việc cần thực hiện;
+    :Điều phối Pick Task cho Picker;
+}
+
+partition "PICKER" {
+    :Nhận Pick Task;
+    :Kiểm tra SKU\n(Stock Keeping Unit)\nvà số lượng cần lấy;
+    :Lấy hàng theo chỉ định;
+}
+
+if (Đủ số lượng thực tế?) then (Có)
+
+    partition "PICKER" {
+        :Hoàn tất Pick;
+        :Đưa hàng sang bước đóng gói / xuất hàng;
+    }
+
+else (Không)
+
+    partition "PICKER" {
+        :Ghi nhận Shortage;
+        :Báo Supervisor;
+    }
+
+    partition "SUPERVISOR" {
+        :Tiếp nhận thông tin thiếu hàng;
+        :Điều phối phương án xử lý;
+    }
+
+endif
+
+' =========================================================
+' TRANSFER
+' =========================================================
+
+if (Có nhu cầu điều chuyển hàng?) then (Có)
+
+    partition "SUPERVISOR" {
+        :Tạo / điều phối Transfer Task;
+        :Phân công Picker tại Warehouse nguồn;
+    }
+
+    partition "PICKER" {
+        :Lấy hàng tại Warehouse nguồn;
+        :Chuẩn bị hàng điều chuyển;
+    }
+
+    partition "RECEIVER" {
+        :Tiếp nhận hàng tại Warehouse đích;
+        :Kiểm tra số lượng;
+        :Cất hàng vào Location đích;
+    }
+
+endif
+
+' =========================================================
+' CYCLE COUNT / INSPECTION
+' =========================================================
+
+partition "SUPERVISOR" {
+    :Tạo đợt kiểm kê / kiểm duyệt;
+    :Xác định phạm vi kiểm kê;
+    :Phân công Inspector;
+}
+
+partition "INSPECTOR" {
+    :Rà soát chất lượng hàng;
+    :Kiểm tra số lượng thực tế;
+    :Kiểm tra khối lượng thực tế;
+    :Đối chiếu với số liệu trên hệ thống;
+}
+
+if (Có chênh lệch?) then (Có)
+
+    partition "INSPECTOR" {
+        :Ghi nhận chênh lệch;
+        :Đề xuất Adjustment số lượng tồn kho;
+        :Ghi nhận lý do / thông tin kiểm tra;
+    }
+
+    partition "MANAGER" {
+        :Kiểm tra đề xuất Adjustment;
+        :Approve / Reject Adjustment;
+    }
+
+    if (Adjustment được duyệt?) then (Approve)
+
+        partition "MANAGER" {
+            :Xác nhận Adjustment;
+        }
+
+    else (Reject)
+
+        partition "SUPERVISOR" {
+            :Ghi nhận Adjustment bị từ chối;
+            :Điều phối kiểm tra lại nếu cần;
+        }
+
+    endif
+
+else (Không)
+
+    partition "INSPECTOR" {
+        :Xác nhận số liệu thực tế\nkhớp với hệ thống;
+    }
+
+endif
+
+' =========================================================
+' VIEW AGAIN
+' =========================================================
+
+partition "VIEWER" {
+    :Tra cứu lại tồn kho khi cần;
+    :Sử dụng số liệu tồn để phục vụ công việc;
+}
+
+stop
+
+@enduml

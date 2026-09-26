@@ -1,0 +1,138 @@
+@startuml ERD_Domain_C_Product_Supplier
+
+title Domain C - Product & Supplier
+
+hide circle
+skinparam linetype ortho
+
+' =========================================================
+' UOMS
+' =========================================================
+
+entity uoms {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(20) <<UK>>
+    * name : VARCHAR(100)
+    description : VARCHAR(255)
+    * is_active : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKUS
+' =========================================================
+
+entity skus {
+    * id : BIGINT <<PK>>
+    --
+    * sku_code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(255)
+    * base_uom_id : BIGINT <<FK>>
+    category : VARCHAR(100)
+    weight : DECIMAL(18,4)
+    volume : DECIMAL(18,4)
+    * status : VARCHAR(20)
+    * is_lot_tracked : BOOLEAN
+    * is_serial_tracked : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU UOM CONVERSIONS
+' =========================================================
+
+entity sku_uom_conversions {
+    * id : BIGINT <<PK>>
+    --
+    * sku_id : BIGINT <<FK>>
+    * uom_id : BIGINT <<FK>>
+    * factor_to_base : DECIMAL(18,4)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU BARCODES
+' =========================================================
+
+entity sku_barcodes {
+    * id : BIGINT <<PK>>
+    --
+    * sku_id : BIGINT <<FK>>
+    * uom_id : BIGINT <<FK>>
+    * barcode : VARCHAR(100) <<UK>>
+    * barcode_type : VARCHAR(30)
+    * is_primary : BOOLEAN
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SUPPLIERS
+' =========================================================
+
+entity suppliers {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(50) <<UK>>
+    * name : VARCHAR(255)
+    tax_code : VARCHAR(50)
+    contact : VARCHAR(255)
+    * status : VARCHAR(20)
+    --
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' SKU SUPPLIERS
+' =========================================================
+
+entity sku_suppliers {
+    * sku_id : BIGINT <<PK, FK>>
+    * supplier_id : BIGINT <<PK, FK>>
+    --
+    supplier_sku_code : VARCHAR(100)
+    * created_at : TIMESTAMP
+    * created_by : BIGINT
+    * updated_at : TIMESTAMP
+    * updated_by : BIGINT
+}
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' SKU - Base UOM
+uoms ||--o{ skus : "base_uom_id"
+
+' SKU - UOM Conversion
+skus ||--o{ sku_uom_conversions : "sku_id"
+uoms ||--o{ sku_uom_conversions : "uom_id"
+
+' SKU - Barcode
+skus ||--o{ sku_barcodes : "sku_id"
+uoms ||--o{ sku_barcodes : "uom_id"
+
+' SKU - Supplier
+skus ||--o{ sku_suppliers : "sku_id"
+suppliers ||--o{ sku_suppliers : "supplier_id"
+
+@enduml

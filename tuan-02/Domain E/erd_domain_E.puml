@@ -1,0 +1,133 @@
+@startuml ERD_Domain_E_StockLedger_Movement
+
+title Domain E — Stock Ledger & Movement
+
+hide circle
+skinparam linetype ortho
+
+' =========================================================
+' MOVEMENT_TYPES  (lookup / master)
+' =========================================================
+
+entity movement_types {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    * sign        : SMALLINT
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of movement_types
+  sign: +1 (nhập / tăng tồn)
+        -1 (xuất / giảm tồn)
+  Các code chuẩn:
+  RECEIPT        (+1)
+  PUTAWAY_OUT    (-1)
+  PUTAWAY_IN     (+1)
+  PICK           (-1)
+  SHIP           (-1)
+  TRANSFER_OUT   (-1)
+  TRANSFER_IN    (+1)
+  ADJUST_IN      (+1)
+  ADJUST_OUT     (-1)
+  REVERSAL       (đảo dấu của dòng gốc)
+end note
+
+' =========================================================
+' REFERENCE_TYPES  (lookup / master)
+' =========================================================
+
+entity reference_types {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of reference_types
+  Các code chuẩn (Sprint 0 — chứng từ
+  chưa thiết kế bảng riêng):
+  RECEIPT, SHIPMENT, TRANSFER,
+  ADJUSTMENT, CYCLE_COUNT, REVERSAL
+end note
+
+' =========================================================
+' STOCK_LEDGER  (append-only, immutable)
+' =========================================================
+
+entity stock_ledger {
+    * id               : BIGINT <<PK, auto-increment>>
+    --
+    * warehouse_id     : BIGINT <<FK (domain B)>>
+    * location_id      : BIGINT <<FK (domain B)>>
+    * sku_id           : BIGINT <<FK (domain C)>>
+    lot_no             : VARCHAR(50)
+    --
+    * movement_type_id : BIGINT <<FK>>
+    * qty_change       : DECIMAL(18,4)
+    * qty_before       : DECIMAL(18,4)
+    * qty_after        : DECIMAL(18,4)
+    --
+    * reference_type_id: BIGINT <<FK>>
+    reference_id       : VARCHAR(100)
+    --
+    reversal_of_id     : BIGINT <<FK self>>
+    note               : VARCHAR(500)
+    --
+    * created_at       : TIMESTAMP
+    * created_by       : BIGINT <<FK (domain A)>>
+}
+
+note top of stock_ledger
+  APPEND-ONLY: KHÔNG bao giờ UPDATE hoặc DELETE.
+  Sai sót sửa bằng cách INSERT dòng REVERSAL mới.
+
+  qty_change có dấu: > 0 là nhập, < 0 là xuất.
+  qty_before / qty_after: on_hand trước/sau tại
+  (location_id, sku_id, lot_no) — hỗ trợ đối soát.
+
+  reversal_of_id trỏ về stock_ledger.id bị đảo.
+  Khi insert REVERSAL: qty_change = -1 * qty_change gốc.
+
+  INDEX (khuyến nghị):
+  - INDEX (warehouse_id, sku_id, created_at)
+    → báo cáo tồn theo kho / SKU
+  - INDEX (location_id, sku_id, lot_no)
+    → truy vấn ledger theo vị trí / lô
+  - INDEX (reference_type_id, reference_id)
+    → tra cứu ledger theo chứng từ gốc
+  - INDEX (reversal_of_id) WHERE reversal_of_id IS NOT NULL
+    → tìm nhanh bút toán đảo
+end note
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+movement_types  ||--o{ stock_ledger : "movement_type_id"
+reference_types ||--o{ stock_ledger : "reference_type_id"
+stock_ledger    |o--o| stock_ledger : "reversal_of_id (self)"
+
+' FK ngoại domain (ghi chú):
+' stock_ledger.warehouse_id  → warehouses.id (domain B)
+' stock_ledger.location_id   → locations.id  (domain B)
+' stock_ledger.sku_id        → skus.id        (domain C)
+' stock_ledger.created_by    → users.id       (domain A)
+' inventory.qty_on_hand / qty_reserved cập nhật
+'   đồng bộ với mỗi dòng stock_ledger (domain D)
+
+@enduml

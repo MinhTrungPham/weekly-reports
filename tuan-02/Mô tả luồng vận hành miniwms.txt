@@ -1,0 +1,20 @@
+Mô tả luồng nghiệp vụ : 
+- Nhận hàng : nhận hàng từ nhà cung cấp bao gồm một số thông tin cơ bản : tên mặt hàng, số lượng, khối lượng, ngày hết hạn. 
+	Tiến hành cân lại để lấy số cân thực tế khi nhận hàng.
+- Cất hàng : Hoặc là nhiều kho, hoặc là kho có nhiều kệ hàng, ngăn xếp. Ở bước này, quản lý vị trí hàng được lưu trữ.
+- Phân bổ tồn : Dựa vào đơn đặc hàng, phân bổ lại số lượng tồn hàng thực tế trong kho và số lượng hàng khả dụng.
+- Soạn hàng : Ưu tiên hàng hóa có ngày hết hạn gần nhất. Cân lại để tính đúng số lượng đã lấy.
+	+ Vấn đề : có thể xuất hiện tình trạng thiếu hàng. Có 3 hướng giải quyết:
+		* Giao thiếu 
+		* Đổi hàng thay thế. (trao đổi vs khách)
+		* Giao bù sau khi có hàng mới.
+- Đóng gói.
+- Giao hàng.
+- Trả hàng : Thực hiện lại quy trình nhận hàng ....
+
+
+
+
+
+??? Không theo số lượng khách đặt ?
+??? Trường hợp nào thiếu hàng ?

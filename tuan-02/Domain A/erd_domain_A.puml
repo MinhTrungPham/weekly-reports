@@ -1,0 +1,140 @@
+@startuml ERD_Domain_A_Auth_RBAC
+
+title Domain A — Authentication & RBAC
+
+hide circle
+skinparam linetype ortho
+
+' =========================================================
+' USERS
+' =========================================================
+
+entity users {
+    * id           : BIGINT <<PK>>
+    --
+    * username     : VARCHAR(100) <<UK>>
+    * email        : VARCHAR(255) <<UK>>
+    * password_hash: VARCHAR(255)
+    * full_name    : VARCHAR(255)
+    * status       : VARCHAR(20)
+    last_login_at  : TIMESTAMP
+    --
+    * created_at   : TIMESTAMP
+    * created_by   : BIGINT
+    * updated_at   : TIMESTAMP
+    * updated_by   : BIGINT
+}
+
+note right of users
+  status: ACTIVE | LOCKED | INACTIVE
+  password_hash: lưu BCrypt/Argon2,
+  không bao giờ lưu plain-text.
+  last_login_at: cập nhật mỗi lần
+  đăng nhập thành công.
+end note
+
+' =========================================================
+' ROLES
+' =========================================================
+
+entity roles {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(50) <<UK>>
+    * name        : VARCHAR(100)
+    description   : VARCHAR(255)
+    * is_active   : BOOLEAN
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of roles
+  Các code chuẩn:
+  ADMIN, WH_MANAGER, SUPERVISOR,
+  RECEIVER, PICKER, INSPECTOR, VIEWER
+end note
+
+' =========================================================
+' PERMISSIONS
+' =========================================================
+
+entity permissions {
+    * id          : BIGINT <<PK>>
+    --
+    * code        : VARCHAR(100) <<UK>>
+    * module      : VARCHAR(50)
+    * action      : VARCHAR(50)
+    description   : VARCHAR(255)
+    --
+    * created_at  : TIMESTAMP
+    * created_by  : BIGINT
+    * updated_at  : TIMESTAMP
+    * updated_by  : BIGINT
+}
+
+note right of permissions
+  Ví dụ:
+  code=INBOUND.RECEIVE, module=INBOUND, action=RECEIVE
+  code=INVENTORY.ADJUST, module=INVENTORY, action=ADJUST
+  code=LEDGER.VIEW, module=LEDGER, action=VIEW
+  code=USER.MANAGE, module=USER, action=MANAGE
+end note
+
+' =========================================================
+' ROLE_PERMISSIONS  (N-N)
+' =========================================================
+
+entity role_permissions {
+    * role_id       : BIGINT <<PK, FK>>
+    * permission_id : BIGINT <<PK, FK>>
+    --
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+}
+
+' =========================================================
+' USER_ROLES  (N-N, scoped by warehouse)
+' =========================================================
+
+entity user_roles {
+    * user_id       : BIGINT <<PK, FK>>
+    * role_id       : BIGINT <<PK, FK>>
+    * warehouse_id  : BIGINT <<PK, FK nullable>>
+    --
+    * is_active     : BOOLEAN
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
+}
+
+note right of user_roles
+  warehouse_id NULL = quyền toàn hệ thống
+  (dùng cho ADMIN).
+  Cùng user có thể có role khác nhau
+  ở từng kho khác nhau.
+  PK composite: (user_id, role_id, warehouse_id)
+  — NULL warehouse_id tham gia composite key
+  phải xử lý bằng partial unique index.
+end note
+
+' =========================================================
+' RELATIONSHIPS
+' =========================================================
+
+' Role - Permissions
+roles        ||--o{ role_permissions  : "role_id"
+permissions  ||--o{ role_permissions  : "permission_id"
+
+' User - Roles (warehouse-scoped)
+users        ||--o{ user_roles        : "user_id"
+roles        ||--o{ user_roles        : "role_id"
+
+' user_roles.warehouse_id -> warehouses (domain B)
+' Ghi chú FK ngoại domain:
+' user_roles.warehouse_id FK → warehouses.id (domain B)
+
+@enduml
