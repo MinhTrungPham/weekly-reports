@@ -52,6 +52,8 @@ entity skus {
 
 entity sku_uom_conversions {
     * id : BIGINT <<PK>>
+    ' UNIQUE (sku_id, uom_id)
+    ' CHECK (factor_to_base > 0)
     --
     * sku_id : BIGINT <<FK>>
     * uom_id : BIGINT <<FK>>
@@ -69,6 +71,7 @@ entity sku_uom_conversions {
 
 entity sku_barcodes {
     * id : BIGINT <<PK>>
+    ' Rule: 1 primary barcode cho moi (sku_id, uom_id)
     --
     * sku_id : BIGINT <<FK>>
     * uom_id : BIGINT <<FK>>
@@ -110,6 +113,7 @@ entity sku_suppliers {
     * supplier_id : BIGINT <<PK, FK>>
     --
     supplier_sku_code : VARCHAR(100)
+    * is_preferred : BOOLEAN
     * created_at : TIMESTAMP
     * created_by : BIGINT
     * updated_at : TIMESTAMP

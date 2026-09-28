@@ -10,19 +10,19 @@ skinparam linetype ortho
 ' =========================================================
 
 entity users {
-    * id           : BIGINT <<PK>>
+    * id            : BIGINT <<PK>>
     --
-    * username     : VARCHAR(100) <<UK>>
-    * email        : VARCHAR(255) <<UK>>
-    * password_hash: VARCHAR(255)
-    * full_name    : VARCHAR(255)
-    * status       : VARCHAR(20)
-    last_login_at  : TIMESTAMP
+    * username      : VARCHAR(100) <<UK>>
+    * email         : VARCHAR(255) <<UK>>
+    * password_hash : VARCHAR(255)
+    * full_name     : VARCHAR(255)
+    * status        : VARCHAR(20)
+    last_login_at   : TIMESTAMP
     --
-    * created_at   : TIMESTAMP
-    * created_by   : BIGINT
-    * updated_at   : TIMESTAMP
-    * updated_by   : BIGINT
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
 }
 
 note right of users
@@ -95,46 +95,57 @@ entity role_permissions {
     * created_by    : BIGINT
 }
 
+note right of role_permissions
+  Composite PK:
+  (role_id, permission_id)
+end note
+
 ' =========================================================
 ' USER_ROLES  (N-N, scoped by warehouse)
 ' =========================================================
 
 entity user_roles {
-    * user_id       : BIGINT <<PK, FK>>
-    * role_id       : BIGINT <<PK, FK>>
-    * warehouse_id  : BIGINT <<PK, FK nullable>>
+    * id           : BIGINT <<PK>>
     --
-    * is_active     : BOOLEAN
-    * created_at    : TIMESTAMP
-    * created_by    : BIGINT
-    * updated_at    : TIMESTAMP
-    * updated_by    : BIGINT
+    * user_id      : BIGINT <<FK>>
+    * role_id      : BIGINT <<FK>>
+    warehouse_id   : BIGINT <<FK, nullable>>
+    --
+    * is_active    : BOOLEAN
+    * created_at   : TIMESTAMP
+    * created_by   : BIGINT
+    * updated_at   : TIMESTAMP
+    * updated_by   : BIGINT
 }
 
 note right of user_roles
   warehouse_id NULL = quyền toàn hệ thống
-  (dùng cho ADMIN).
+  (ví dụ ADMIN).
+
   Cùng user có thể có role khác nhau
-  ở từng kho khác nhau.
-  PK composite: (user_id, role_id, warehouse_id)
-  — NULL warehouse_id tham gia composite key
-  phải xử lý bằng partial unique index.
+  ở từng warehouse.
+
+  UNIQUE:
+  - (user_id, role_id, warehouse_id)
+    khi warehouse_id IS NOT NULL
+  - (user_id, role_id)
+    khi warehouse_id IS NULL
+
+  Có thể enforce bằng partial unique index
+  hoặc cơ chế tương đương của DBMS.
 end note
 
 ' =========================================================
 ' RELATIONSHIPS
 ' =========================================================
 
-' Role - Permissions
-roles        ||--o{ role_permissions  : "role_id"
-permissions  ||--o{ role_permissions  : "permission_id"
+roles       ||--o{ role_permissions : "role_id"
+permissions ||--o{ role_permissions : "permission_id"
 
-' User - Roles (warehouse-scoped)
-users        ||--o{ user_roles        : "user_id"
-roles        ||--o{ user_roles        : "role_id"
+users       ||--o{ user_roles : "user_id"
+roles       ||--o{ user_roles : "role_id"
 
-' user_roles.warehouse_id -> warehouses (domain B)
-' Ghi chú FK ngoại domain:
-' user_roles.warehouse_id FK → warehouses.id (domain B)
+' Cross-domain:
+' user_roles.warehouse_id FK -> warehouses.id (Domain B)
 
 @enduml

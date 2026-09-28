@@ -13,19 +13,19 @@ title Domain A — Authentication & RBAC
 ' =========================================================
 
 entity users {
-    * id           : BIGINT <<PK>>
+    * id            : BIGINT <<PK>>
     --
-    * username     : VARCHAR(100) <<UK>>
-    * email        : VARCHAR(255) <<UK>>
-    * password_hash: VARCHAR(255)
-    * full_name    : VARCHAR(255)
-    * status       : VARCHAR(20)
-    last_login_at  : TIMESTAMP
+    * username      : VARCHAR(100) <<UK>>
+    * email         : VARCHAR(255) <<UK>>
+    * password_hash : VARCHAR(255)
+    * full_name     : VARCHAR(255)
+    * status        : VARCHAR(20)
+    last_login_at   : TIMESTAMP
     --
-    * created_at   : TIMESTAMP
-    * created_by   : BIGINT
-    * updated_at   : TIMESTAMP
-    * updated_by   : BIGINT
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
 }
 
 note right of users
@@ -98,47 +98,58 @@ entity role_permissions {
     * created_by    : BIGINT
 }
 
+note right of role_permissions
+  Composite PK:
+  (role_id, permission_id)
+end note
+
 ' =========================================================
 ' USER_ROLES  (N-N, scoped by warehouse)
 ' =========================================================
 
 entity user_roles {
-    * user_id       : BIGINT <<PK, FK>>
-    * role_id       : BIGINT <<PK, FK>>
-    * warehouse_id  : BIGINT <<PK, FK nullable>>
+    * id           : BIGINT <<PK>>
     --
-    * is_active     : BOOLEAN
-    * created_at    : TIMESTAMP
-    * created_by    : BIGINT
-    * updated_at    : TIMESTAMP
-    * updated_by    : BIGINT
+    * user_id      : BIGINT <<FK>>
+    * role_id      : BIGINT <<FK>>
+    warehouse_id   : BIGINT <<FK, nullable>>
+    --
+    * is_active    : BOOLEAN
+    * created_at   : TIMESTAMP
+    * created_by   : BIGINT
+    * updated_at   : TIMESTAMP
+    * updated_by   : BIGINT
 }
 
 note right of user_roles
   warehouse_id NULL = quyền toàn hệ thống
-  (dùng cho ADMIN).
+  (ví dụ ADMIN).
+
   Cùng user có thể có role khác nhau
-  ở từng kho khác nhau.
-  PK composite: (user_id, role_id, warehouse_id)
-  — NULL warehouse_id tham gia composite key
-  phải xử lý bằng partial unique index.
+  ở từng warehouse.
+
+  UNIQUE:
+  - (user_id, role_id, warehouse_id)
+    khi warehouse_id IS NOT NULL
+  - (user_id, role_id)
+    khi warehouse_id IS NULL
+
+  Có thể enforce bằng partial unique index
+  hoặc cơ chế tương đương của DBMS.
 end note
 
 ' =========================================================
 ' RELATIONSHIPS
 ' =========================================================
 
-' Role - Permissions
-roles        ||--o{ role_permissions  : "role_id"
-permissions  ||--o{ role_permissions  : "permission_id"
+roles       ||--o{ role_permissions : "role_id"
+permissions ||--o{ role_permissions : "permission_id"
 
-' User - Roles (warehouse-scoped)
-users        ||--o{ user_roles        : "user_id"
-roles        ||--o{ user_roles        : "role_id"
+users       ||--o{ user_roles : "user_id"
+roles       ||--o{ user_roles : "role_id"
 
-' user_roles.warehouse_id -> warehouses (domain B)
-' Ghi chú FK ngoại domain:
-' user_roles.warehouse_id FK → warehouses.id (domain B)
+' Cross-domain:
+' user_roles.warehouse_id FK -> warehouses.id (Domain B)
 
 
 title Domain B - Warehouse Structure
@@ -149,12 +160,12 @@ title Domain B - Warehouse Structure
 ' =========================================================
 
 entity warehouses {
-    * id : BIGINT <<PK>>
+    * id         : BIGINT <<PK>>
     --
-    * code : VARCHAR(20) <<UK>>
-    * name : VARCHAR(100)
-    address : VARCHAR(255)
-    * status : VARCHAR(20)
+    * code       : VARCHAR(20) <<UK>>
+    * name       : VARCHAR(100)
+    address      : VARCHAR(255)
+    * status     : VARCHAR(20)
     --
     * created_at : TIMESTAMP
     * created_by : BIGINT
@@ -163,39 +174,29 @@ entity warehouses {
 }
 
 ' =========================================================
-' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tu tham chieu)
+' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tự tham chiếu)
 ' =========================================================
 
 entity locations {
-    * id : BIGINT <<PK>>
+    * id            : BIGINT <<PK>>
     --
-    * warehouse_id : BIGINT <<FK>>
-    parent_id : BIGINT <<FK>>
+    * warehouse_id  : BIGINT <<FK>>
+    parent_id       : BIGINT <<FK, nullable>>
     * location_type : VARCHAR(10)
-    * code : VARCHAR(50) <<UK>>
-    * name : VARCHAR(100)
-    * full_path : VARCHAR(255)
-    * purpose : VARCHAR(20)
-    max_weight : DECIMAL(18,4)
-    max_volume : DECIMAL(18,4)
-    * is_pickable : BOOLEAN
-    * is_active : BOOLEAN
+    * code          : VARCHAR(50)
+    * name          : VARCHAR(100)
+    * full_path     : VARCHAR(255)
+    * purpose       : VARCHAR(20)
+    max_weight      : DECIMAL(18,4)
+    max_volume      : DECIMAL(18,4)
+    * is_pickable   : BOOLEAN
+    * is_active     : BOOLEAN
     --
-    * created_at : TIMESTAMP
-    * created_by : BIGINT
-    * updated_at : TIMESTAMP
-    * updated_by : BIGINT
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
 }
-
-' =========================================================
-' RELATIONSHIPS
-' =========================================================
-
-' Warehouse - Location
-warehouses ||--o{ locations : "warehouse_id"
-
-' Location - Location cha (Zone -> Aisle -> Rack -> Bin)
-locations |o--o{ locations : "parent_id"
 
 
 title Domain C - Product & Supplier
@@ -248,6 +249,8 @@ entity skus {
 
 entity sku_uom_conversions {
     * id : BIGINT <<PK>>
+    ' UNIQUE (sku_id, uom_id)
+    ' CHECK (factor_to_base > 0)
     --
     * sku_id : BIGINT <<FK>>
     * uom_id : BIGINT <<FK>>
@@ -265,6 +268,7 @@ entity sku_uom_conversions {
 
 entity sku_barcodes {
     * id : BIGINT <<PK>>
+    ' Rule: 1 primary barcode cho moi (sku_id, uom_id)
     --
     * sku_id : BIGINT <<FK>>
     * uom_id : BIGINT <<FK>>
@@ -306,6 +310,7 @@ entity sku_suppliers {
     * supplier_id : BIGINT <<PK, FK>>
     --
     supplier_sku_code : VARCHAR(100)
+    * is_preferred : BOOLEAN
     * created_at : TIMESTAMP
     * created_by : BIGINT
     * updated_at : TIMESTAMP
@@ -331,63 +336,56 @@ uoms ||--o{ sku_barcodes : "uom_id"
 skus ||--o{ sku_suppliers : "sku_id"
 suppliers ||--o{ sku_suppliers : "supplier_id"
 
-' ERD Domain D - Inventory Model
-' Sprint 0 - Mini-WMS (FreshLink Produce)
-' ĐỒNG BỘ với domain C: PK/FK = BIGINT (không theo UUID trong Quy ước chung
-' vì domain C đã triển khai thực tế bằng BIGINT - nhóm cần cập nhật lại
-' tài liệu Quy ước chung cho khớp thực tế)
-' Phụ thuộc: domain B (warehouses, locations), domain C (skus - đã có)
 
 
 entity inventory {
-  * id : BIGINT <<PK>>
+  * id               : BIGINT <<PK>>
   --
-  * warehouse_id : BIGINT <<FK>>
-  * location_id : BIGINT <<FK>>
-  * sku_id : BIGINT <<FK>>
-  lot_no : VARCHAR(50)
-  expiry_date : DATE
+  * warehouse_id     : BIGINT <<FK (domain B)>>
+  * location_id      : BIGINT <<FK (domain B)>>
+  * sku_id           : BIGINT <<FK (domain C)>>
+  lot_no             : VARCHAR(50)
+  serial_no          : VARCHAR(100)
+  expiry_date        : DATE
   --
-  * qty_on_hand : DECIMAL(18,4)
-  * qty_reserved : DECIMAL(18,4)
-  qty_available : DECIMAL(18,4) <<generated>>
+  * qty_on_hand      : DECIMAL(18,4)
+  * qty_reserved     : DECIMAL(18,4)
+  qty_available      : DECIMAL(18,4) <<generated>>
   --
-  * version : INT
+  * version          : INT
   --
-  * created_at : TIMESTAMP
-  * created_by : BIGINT
-  * updated_at : TIMESTAMP
-  * updated_by : BIGINT
+  * created_at       : TIMESTAMP
+  * created_by       : BIGINT <<FK (domain A)>>
+  * updated_at       : TIMESTAMP
+  * updated_by       : BIGINT <<FK (domain A)>>
 }
 
 note top of inventory
-  INDEX (khuyến nghị):
-  - UNIQUE (location_id, sku_id, lot_no)
-    -> chống trùng dòng tồn cùng vị trí/lô
-  - INDEX (sku_id)
-    -> truy vấn "SKU này còn ở đâu, tổng bao nhiêu"
-  - INDEX (warehouse_id, sku_id)
-    -> truy vấn tồn theo kho, dùng cho Viewer/báo cáo
-  - INDEX (expiry_date) WHERE expiry_date IS NOT NULL
-    -> hỗ trợ truy vấn FEFO (lấy lô hết hạn trước)
-
   CHECK constraints:
   - qty_on_hand  >= 0
   - qty_reserved >= 0
   - qty_reserved <= qty_on_hand
-
   qty_available = qty_on_hand - qty_reserved
-  (generated column hoặc VIEW, KHÔNG cho ghi trực tiếp)
+  (generated column / VIEW, không ghi trực tiếp)
 
-  Reserve ở CẤP LOCATION: qty_reserved nằm ngay trong dòng
-  theo location_id -> Picker biết đúng vị trí ngay khi
-  được giao Pick Task.
+  KHÓA DUY NHẤT: UNIQUE (location_id, sku_id, lot_no, serial_no)
+  - warehouse_id phai khop voi warehouse_id cua location_id
 
-  version: optimistic locking, tăng +1 mỗi lần UPDATE,
-  kèm điều kiện WHERE version = :old_version khi ghi.
+  INDEX:
+  - INDEX (sku_id)
+  - INDEX (warehouse_id, sku_id)
+  - INDEX (expiry_date) WHERE expiry_date IS NOT NULL → FEFO
+
+  - Chỉ location_type = BIN mới có dòng inventory (BR-D-08)
+  - Tổng qty_available theo SKU chỉ cộng location.is_pickable = true,
+    loại trừ purpose = QC, DAMAGED (BR-D-10)
+  - Hàng in-transit: purpose = TRANSIT (BR-D-11, chờ domain B xác nhận)
+
+  Reserve ở cấp location (không phải cấp kho).
+  version: optimistic locking - UPDATE kèm WHERE version = :old_version.
+  Số lượng luôn lưu theo base_uom_id của SKU (BR-D-05).
 end note
 
-' ---- Tham chiếu ngoài domain D (domain B chưa có - vẫn là giả định) ----
 
 
 
@@ -421,8 +419,9 @@ note right of movement_types
   RECEIPT        (+1)
   PUTAWAY_OUT    (-1)
   PUTAWAY_IN     (+1)
-  PICK           (-1)
-  SHIP           (-1)
+  PICK_OUT       (-1)
+  PICK_IN        (+1)
+  SHIP           (-1) (chi tru hang o staging)
   TRANSFER_OUT   (-1)
   TRANSFER_IN    (+1)
   ADJUST_IN      (+1)
@@ -466,6 +465,7 @@ entity stock_ledger {
     * location_id      : BIGINT <<FK (domain B)>>
     * sku_id           : BIGINT <<FK (domain C)>>
     lot_no             : VARCHAR(50)
+    serial_no          : VARCHAR(100)
     --
     * movement_type_id : BIGINT <<FK>>
     * qty_change       : DECIMAL(18,4)
@@ -483,7 +483,9 @@ entity stock_ledger {
 }
 
 note top of stock_ledger
-  APPEND-ONLY: KHÔNG bao giờ UPDATE hoặc DELETE.
+  APPEND-ONLY:
+  - Reserve/Release khong ghi vao ledger.
+  - Ledger va inventory phai update trong cung transaction. KHÔNG bao giờ UPDATE hoặc DELETE.
   Sai sót sửa bằng cách INSERT dòng REVERSAL mới.
 
   qty_change có dấu: > 0 là nhập, < 0 là xuất.
@@ -524,25 +526,24 @@ stock_ledger    |o--o| stock_ledger : "reversal_of_id (self)"
 ' =========================================================
 ' CROSS-DOMAIN RELATIONSHIPS (Tich hop - Muc 6)
 ' =========================================================
-
 ' Domain A <-> Domain B
 warehouses ||--o{ user_roles : "warehouse_id"
-
-' Domain A <-> Domain E
+' Domain A <-> Domain D, E
+users ||--o{ inventory : "created_by"
 users ||--o{ stock_ledger : "created_by"
-
 ' Domain B <-> Domain D
 warehouses ||--o{ inventory : "warehouse_id"
 locations ||--o{ inventory : "location_id"
-
 ' Domain B <-> Domain E
 warehouses ||--o{ stock_ledger : "warehouse_id"
 locations ||--o{ stock_ledger : "location_id"
-
 ' Domain C <-> Domain D
 skus ||--o{ inventory : "sku_id"
-
 ' Domain C <-> Domain E
 skus ||--o{ stock_ledger : "sku_id"
 
+' =========================================================
+' GLOBAL RULES
+' =========================================================
+note "GLOBAL RULES\n\n1. PK/FK dA1ng BIGINT thong nhat.\n2. Quantity dA1ng DECIMAL(18,4).\n3. Timestamp luu UTC.\n4. Master da phat sinh giao dich khong hard-delete.\n5. created_by / updated_by ve logic tham chieu users.id.\n6. location/SKU con ton khong duoc deactivate.\n7. inventory + stock_ledger cap nhat cung transaction.\n8. inventory chi gan location_type = BIN.\n9. Inventory/Ledger luu quantity theo base UoM.\n10. Business code da phat sinh giao dich khong duoc doi." as GLOBAL_RULES
 @enduml

@@ -31,8 +31,9 @@ note right of movement_types
   RECEIPT        (+1)
   PUTAWAY_OUT    (-1)
   PUTAWAY_IN     (+1)
-  PICK           (-1)
-  SHIP           (-1)
+  PICK_OUT       (-1)
+  PICK_IN        (+1)
+  SHIP           (-1) (chi tru hang o staging)
   TRANSFER_OUT   (-1)
   TRANSFER_IN    (+1)
   ADJUST_IN      (+1)
@@ -76,6 +77,7 @@ entity stock_ledger {
     * location_id      : BIGINT <<FK (domain B)>>
     * sku_id           : BIGINT <<FK (domain C)>>
     lot_no             : VARCHAR(50)
+    serial_no          : VARCHAR(100)
     --
     * movement_type_id : BIGINT <<FK>>
     * qty_change       : DECIMAL(18,4)
@@ -93,7 +95,9 @@ entity stock_ledger {
 }
 
 note top of stock_ledger
-  APPEND-ONLY: KHÔNG bao giờ UPDATE hoặc DELETE.
+  APPEND-ONLY:
+  - Reserve/Release khong ghi vao ledger.
+  - Ledger va inventory phai update trong cung transaction. KHÔNG bao giờ UPDATE hoặc DELETE.
   Sai sót sửa bằng cách INSERT dòng REVERSAL mới.
 
   qty_change có dấu: > 0 là nhập, < 0 là xuất.

@@ -1,0 +1,1129 @@
+A | Bảng | Cột | Null:Null | Key:Khóa
+A | users | id | Null:N | Key:PK
+A | users | username | Null:N | Key:UK
+A | users | email | Null:N | Key:UK
+A | users | password_hash | Null:N | Key:
+A | users | full_name | Null:N | Key:
+A | users | status | Null:N | Key:
+A | users | last_login_at | Null:Y | Key:
+A | users | created_at | Null:N | Key:
+A | users | created_by | Null:N | Key:FK → users.id
+A | users | updated_at | Null:N | Key:
+A | users | updated_by | Null:N | Key:FK → users.id
+A | roles | id | Null:N | Key:PK
+A | roles | code | Null:N | Key:UK
+A | roles | name | Null:N | Key:
+A | roles | description | Null:Y | Key:
+A | roles | is_active | Null:N | Key:
+A | roles | created_at | Null:N | Key:
+A | roles | created_by | Null:N | Key:FK → users.id
+A | roles | updated_at | Null:N | Key:
+A | roles | updated_by | Null:N | Key:FK → users.id
+A | permissions | id | Null:N | Key:PK
+A | permissions | code | Null:N | Key:UK
+A | permissions | module | Null:N | Key:
+A | permissions | action | Null:N | Key:
+A | permissions | description | Null:Y | Key:
+A | permissions | created_at | Null:N | Key:
+A | permissions | created_by | Null:N | Key:FK → users.id
+A | permissions | updated_at | Null:N | Key:
+A | permissions | updated_by | Null:N | Key:FK → users.id
+A | role_permissions | role_id | Null:N | Key:PK, FK → roles.id
+A | role_permissions | permission_id | Null:N | Key:PK, FK → permissions.id
+A | role_permissions | created_at | Null:N | Key:
+A | role_permissions | created_by | Null:N | Key:FK → users.id
+A | user_roles | id | Null:N | Key:PK
+A | user_roles | user_id | Null:N | Key:FK → users.id
+A | user_roles | role_id | Null:N | Key:PK, FK → roles.id
+A | user_roles | warehouse_id | Null:Y | Key:PK, FK → warehouses.id (domain B)
+A | user_roles | is_active | Null:N | Key:
+A | user_roles | created_at | Null:N | Key:
+A | user_roles | created_by | Null:N | Key:FK → users.id
+A | user_roles | updated_at | Null:N | Key:
+A | user_roles | updated_by | Null:N | Key:FK → users.id
+B | Bảng | Cột | Null:Null | Key:Khóa
+B | warehouses | id | Null:N | Key:PK
+B | warehouses | code | Null:N | Key:UK
+B | warehouses | name | Null:N | Key:
+B | warehouses | address | Null:Y | Key:
+B | warehouses | status | Null:N | Key:
+B | warehouses | created_at | Null:N | Key:
+B | warehouses | created_by | Null:N | Key:FK → users.id
+B | warehouses | updated_at | Null:N | Key:
+B | warehouses | updated_by | Null:N | Key:FK → users.id
+B | locations | id | Null:N | Key:PK
+B | locations | warehouse_id | Null:N | Key:FK → warehouses.id
+B | locations | parent_id | Null:Y | Key:FK → locations.id
+B | locations | location_type | Null:N | Key:
+B | locations | code | Null:N | Key:UK (warehouse_id, code)
+B | locations | name | Null:N | Key:
+B | locations | full_path | Null:N | Key:UK (warehouse_id, full_path)
+B | locations | purpose | Null:N | Key:
+B | locations | max_weight | Null:Y | Key:
+B | locations | max_volume | Null:Y | Key:
+B | locations | is_pickable | Null:N | Key:
+B | locations | is_active | Null:N | Key:
+B | locations | created_at | Null:N | Key:
+B | locations | created_by | Null:N | Key:FK → users.id
+B | locations | updated_at | Null:N | Key:
+B | locations | updated_by | Null:N | Key:FK → users.id
+B | locations |  | Null: | Key:
+B | Ràng buộc |  | Null: | Key:
+B | UNIQUE (warehouse_id, code); UNIQUE (warehouse_id, full_path) trên locations |  | Null: | Key:
+B | CHECK location_type IN ('ZONE','AISLE','RACK','BIN') |  | Null: | Key:
+B | CHECK purpose IN ('RECEIVING','STORAGE','PICKING','STAGING','QC','DAMAGED') |  | Null: | Key:
+B | CHECK max_weight >= 0 và max_volume >= 0 (hoặc NULL) |  | Null: | Key:
+B | Index: (warehouse_id, location_type), (parent_id), (full_path) |  | Null: | Key:
+C | Bảng | Cột | Null:Null | Key:Khóa
+C | skus | id | Null:N | Key:PK
+C | skus | sku_code | Null:N | Key:UK
+C | skus | name | Null:N | Key:
+C | skus | base_uom_id | Null:N | Key:FK → uoms.id
+C | skus | category | Null:Y | Key:
+C | skus | weight | Null:Y | Key:
+C | skus | volume | Null:Y | Key:
+C | skus | is_lot_tracked | Null:N | Key:
+C | skus | is_serial_tracked | Null:N | Key:
+C | skus | status | Null:N | Key:
+C | skus | created_at | Null:N | Key:
+C | skus | created_by | Null:N | Key:FK → users.id
+C | skus | updated_at | Null:N | Key:
+C | skus | updated_by | Null:N | Key:FK → users.id
+C | uoms | id | Null:N | Key:PK
+C | uoms | code | Null:N | Key:UK
+C | uoms | name | Null:N | Key:
+C | uoms | description | Null:Y | Key:
+C | uoms | is_active | Null:N | Key:
+C | uoms | created_at | Null:N | Key:
+C | uoms | created_by | Null:N | Key:FK → users.id
+C | uoms | updated_at | Null:N | Key:
+C | uoms | updated_by | Null:N | Key:FK → users.id
+C | sku_uom_conversions | id | Null:N | Key:PK
+C | sku_uom_conversions | sku_id | Null:N | Key:FK → skus.id
+C | sku_uom_conversions | uom_id | Null:N | Key:FK → uoms.id
+C | sku_uom_conversions | factor_to_base | Null:N | Key:
+C | sku_uom_conversions | created_at | Null:N | Key:
+C | sku_uom_conversions | created_by | Null:N | Key:FK → users.id
+C | sku_uom_conversions | updated_at | Null:N | Key:
+C | sku_uom_conversions | updated_by | Null:N | Key:FK → users.id
+C | sku_barcodes | id | Null:N | Key:PK
+C | sku_barcodes | sku_id | Null:N | Key:FK → skus.id
+C | sku_barcodes | uom_id | Null:N | Key:FK → uoms.id
+C | sku_barcodes | barcode | Null:N | Key:UK
+C | sku_barcodes | barcode_type | Null:N | Key:
+C | sku_barcodes | is_primary | Null:N | Key:
+C | sku_barcodes | created_at | Null:N | Key:
+C | sku_barcodes | created_by | Null:N | Key:FK → users.id
+C | sku_barcodes | updated_at | Null:N | Key:
+C | sku_barcodes | updated_by | Null:N | Key:FK → users.id
+C | suppliers | id | Null:N | Key:PK
+C | suppliers | code | Null:N | Key:UK
+C | suppliers | name | Null:N | Key:
+C | suppliers | tax_code | Null:Y | Key:
+C | suppliers | contact | Null:Y | Key:
+C | suppliers | status | Null:N | Key:
+C | suppliers | created_at | Null:N | Key:
+C | suppliers | created_by | Null:N | Key:FK → users.id
+C | suppliers | updated_at | Null:N | Key:
+C | suppliers | updated_by | Null:N | Key:FK → users.id
+C | sku_suppliers | sku_id | Null:N | Key:PK, FK → skus.id
+C | sku_suppliers | supplier_id | Null:N | Key:PK, FK → suppliers.id
+C | sku_suppliers | supplier_sku_code | Null:Y | Key:
+C | sku_suppliers | is_preferred | Null:N | Key:
+C | sku_suppliers | created_at | Null:N | Key:
+C | sku_suppliers | created_by | Null:N | Key:FK → users.id
+C | sku_suppliers | updated_at | Null:N | Key:
+C | sku_suppliers | updated_by | Null:N | Key:FK → users.id
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+C | sku_suppliers |  | Null: | Key:
+D | Bảng | Cột | Null:Null | Key:Khóa
+D | inventory | id | Null:N | Key:PK
+D | inventory | warehouse_id | Null:N | Key:FK→warehouses.id (domain B)
+D | inventory | location_id | Null:N | Key:FK→locations.id (domain B)
+D | inventory | sku_id | Null:N | Key:FK→skus.id (domain C)
+D | inventory | lot_no | Null:Y | Key:
+D | inventory | serial_no | Null:Y | Key:UK (part)
+D | inventory | expiry_date | Null:Y | Key:
+D | inventory | qty_on_hand | Null:N | Key:
+D | inventory | qty_reserved | Null:N | Key:
+D | inventory | qty_available | Null:N | Key:
+D | inventory | version | Null:N | Key:
+D | inventory | created_at | Null:N | Key:
+D | inventory | created_by | Null:N | Key:FK→users.id (domain A)
+D | inventory | updated_at | Null:N | Key:
+D | inventory | updated_by | Null:N | Key:FK→users.id (domain A)
+E | Bảng | Cột | Null:Null | Key:Khóa
+E | movement_types | id | Null:N | Key:PK
+E | movement_types | code | Null:N | Key:UK
+E | movement_types | name | Null:N | Key:
+E | movement_types | sign | Null:N | Key:
+E | movement_types | description | Null:Y | Key:
+E | movement_types | is_active | Null:N | Key:
+E | movement_types | created_at | Null:N | Key:
+E | movement_types | created_by | Null:N | Key:FK → users.id (domain A)
+E | movement_types | updated_at | Null:N | Key:
+E | movement_types | updated_by | Null:N | Key:FK → users.id (domain A)
+E | reference_types | id | Null:N | Key:PK
+E | reference_types | code | Null:N | Key:UK
+E | reference_types | name | Null:N | Key:
+E | reference_types | description | Null:Y | Key:
+E | reference_types | is_active | Null:N | Key:
+E | reference_types | created_at | Null:N | Key:
+E | reference_types | created_by | Null:N | Key:FK → users.id (domain A)
+E | reference_types | updated_at | Null:N | Key:
+E | reference_types | updated_by | Null:N | Key:FK → users.id (domain A)
+E | stock_ledger | id | Null:N | Key:PK
+E | stock_ledger | warehouse_id | Null:N | Key:FK → warehouses.id (domain B)
+E | stock_ledger | location_id | Null:N | Key:FK → locations.id (domain B)
+E | stock_ledger | sku_id | Null:N | Key:FK → skus.id (domain C)
+E | stock_ledger | lot_no | Null:Y | Key:
+E | stock_ledger | serial_no | Null:Y | Key:
+E | stock_ledger | movement_type_id | Null:N | Key:FK → movement_types.id
+E | stock_ledger | qty_change | Null:N | Key:
+E | stock_ledger | qty_before | Null:N | Key:
+E | stock_ledger | qty_after | Null:N | Key:
+E | stock_ledger | reference_type_id | Null:N | Key:FK → reference_types.id
+E | stock_ledger | reference_id | Null:Y | Key:
+E | stock_ledger | reversal_of_id | Null:Y | Key:FK → stock_ledger.id (self)
+E | stock_ledger | note | Null:Y | Key:
+E | stock_ledger | created_at | Null:N | Key:
+E | stock_ledger | created_by | Null:N | Key:FK → users.id (domain A)

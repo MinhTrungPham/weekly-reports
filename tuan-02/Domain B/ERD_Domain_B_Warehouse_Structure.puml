@@ -10,12 +10,12 @@ skinparam linetype ortho
 ' =========================================================
 
 entity warehouses {
-    * id : BIGINT <<PK>>
+    * id         : BIGINT <<PK>>
     --
-    * code : VARCHAR(20) <<UK>>
-    * name : VARCHAR(100)
-    address : VARCHAR(255)
-    * status : VARCHAR(20)
+    * code       : VARCHAR(20) <<UK>>
+    * name       : VARCHAR(100)
+    address      : VARCHAR(255)
+    * status     : VARCHAR(20)
     --
     * created_at : TIMESTAMP
     * created_by : BIGINT
@@ -24,38 +24,54 @@ entity warehouses {
 }
 
 ' =========================================================
-' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tu tham chieu)
+' LOCATIONS (Zone -> Aisle -> Rack -> Bin, tự tham chiếu)
 ' =========================================================
 
 entity locations {
-    * id : BIGINT <<PK>>
+    * id            : BIGINT <<PK>>
     --
-    * warehouse_id : BIGINT <<FK>>
-    parent_id : BIGINT <<FK>>
+    * warehouse_id  : BIGINT <<FK>>
+    parent_id       : BIGINT <<FK, nullable>>
     * location_type : VARCHAR(10)
-    * code : VARCHAR(50) <<UK>>
-    * name : VARCHAR(100)
-    * full_path : VARCHAR(255)
-    * purpose : VARCHAR(20)
-    max_weight : DECIMAL(18,4)
-    max_volume : DECIMAL(18,4)
-    * is_pickable : BOOLEAN
-    * is_active : BOOLEAN
+    * code          : VARCHAR(50)
+    * name          : VARCHAR(100)
+    * full_path     : VARCHAR(255)
+    * purpose       : VARCHAR(20)
+    max_weight      : DECIMAL(18,4)
+    max_volume      : DECIMAL(18,4)
+    * is_pickable   : BOOLEAN
+    * is_active     : BOOLEAN
     --
-    * created_at : TIMESTAMP
-    * created_by : BIGINT
-    * updated_at : TIMESTAMP
-    * updated_by : BIGINT
+    * created_at    : TIMESTAMP
+    * created_by    : BIGINT
+    * updated_at    : TIMESTAMP
+    * updated_by    : BIGINT
 }
+
+note right of locations
+  UNIQUE (warehouse_id, code)
+  UNIQUE (warehouse_id, full_path)
+
+  location_type:
+  ZONE | AISLE | RACK | BIN
+
+  purpose:
+  RECEIVING | STORAGE | PICKING |
+  STAGING | QC | DAMAGED
+
+  Rules:
+  - parent phải thuộc cùng warehouse
+  - hierarchy: ZONE -> AISLE -> RACK -> BIN
+  - inventory chỉ tham chiếu location_type = BIN
+  - không deactivate location còn tồn kho
+  - QC/DAMAGED không tính vào sellable availability
+end note
 
 ' =========================================================
 ' RELATIONSHIPS
 ' =========================================================
 
-' Warehouse - Location
 warehouses ||--o{ locations : "warehouse_id"
-
-' Location - Location cha (Zone -> Aisle -> Rack -> Bin)
-locations |o--o{ locations : "parent_id"
+locations  |o--o{ locations : "parent_id"
 
 @enduml

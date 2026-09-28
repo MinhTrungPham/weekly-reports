@@ -1,105 +1,100 @@
 @startuml erd_domain_D
-' ERD Domain D - Inventory Model
-' Sprint 0 - Mini-WMS (FreshLink Produce)
-' ĐỒNG BỘ với domain C: PK/FK = BIGINT (không theo UUID trong Quy ước chung
-' vì domain C đã triển khai thực tế bằng BIGINT - nhóm cần cập nhật lại
-' tài liệu Quy ước chung cho khớp thực tế)
-' Phụ thuộc: domain B (warehouses, locations), domain C (skus - đã có)
 
 hide circle
 skinparam linetype ortho
 
 entity inventory {
-  * id : BIGINT <<PK>>
+  * id               : BIGINT <<PK>>
   --
-  * warehouse_id : BIGINT <<FK>>
-  * location_id : BIGINT <<FK>>
-  * sku_id : BIGINT <<FK>>
-  lot_no : VARCHAR(50)
-  expiry_date : DATE
+  * warehouse_id     : BIGINT <<FK (domain B)>>
+  * location_id      : BIGINT <<FK (domain B)>>
+  * sku_id           : BIGINT <<FK (domain C)>>
+  lot_no             : VARCHAR(50)
+  serial_no          : VARCHAR(100)
+  expiry_date        : DATE
   --
-  * qty_on_hand : DECIMAL(18,4)
-  * qty_reserved : DECIMAL(18,4)
-  qty_available : DECIMAL(18,4) <<generated>>
+  * qty_on_hand      : DECIMAL(18,4)
+  * qty_reserved     : DECIMAL(18,4)
+  qty_available      : DECIMAL(18,4) <<generated>>
   --
-  * version : INT
+  * version          : INT
   --
-  * created_at : TIMESTAMP
-  * created_by : BIGINT
-  * updated_at : TIMESTAMP
-  * updated_by : BIGINT
+  * created_at       : TIMESTAMP
+  * created_by       : BIGINT <<FK (domain A)>>
+  * updated_at       : TIMESTAMP
+  * updated_by       : BIGINT <<FK (domain A)>>
 }
 
 note top of inventory
-  INDEX (khuyến nghị):
-  - UNIQUE (location_id, sku_id, lot_no)
-    -> chống trùng dòng tồn cùng vị trí/lô
-  - INDEX (sku_id)
-    -> truy vấn "SKU này còn ở đâu, tổng bao nhiêu"
-  - INDEX (warehouse_id, sku_id)
-    -> truy vấn tồn theo kho, dùng cho Viewer/báo cáo
-  - INDEX (expiry_date) WHERE expiry_date IS NOT NULL
-    -> hỗ trợ truy vấn FEFO (lấy lô hết hạn trước)
-
   CHECK constraints:
   - qty_on_hand  >= 0
   - qty_reserved >= 0
   - qty_reserved <= qty_on_hand
-
   qty_available = qty_on_hand - qty_reserved
-  (generated column hoặc VIEW, KHÔNG cho ghi trực tiếp)
+  (generated column / VIEW, không ghi trực tiếp)
 
-  Reserve ở CẤP LOCATION: qty_reserved nằm ngay trong dòng
-  theo location_id -> Picker biết đúng vị trí ngay khi
-  được giao Pick Task.
+  KHÓA DUY NHẤT: UNIQUE (location_id, sku_id, lot_no, serial_no)
+  - warehouse_id phai khop voi warehouse_id cua location_id
 
-  version: optimistic locking, tăng +1 mỗi lần UPDATE,
-  kèm điều kiện WHERE version = :old_version khi ghi.
+  INDEX:
+  - INDEX (sku_id)
+  - INDEX (warehouse_id, sku_id)
+  - INDEX (expiry_date) WHERE expiry_date IS NOT NULL → FEFO
+
+  - Chỉ location_type = BIN mới có dòng inventory (BR-D-08)
+  - Tổng qty_available theo SKU chỉ cộng location.is_pickable = true,
+    loại trừ purpose = QC, DAMAGED (BR-D-10)
+  - Hàng in-transit: purpose = TRANSIT (BR-D-11, chờ domain B xác nhận)
+
+  Reserve ở cấp location (không phải cấp kho).
+  version: optimistic locking - UPDATE kèm WHERE version = :old_version.
+  Số lượng luôn lưu theo base_uom_id của SKU (BR-D-05).
 end note
 
-' ---- Tham chiếu ngoài domain D (domain B chưa có - vẫn là giả định) ----
-entity warehouses <<domain B - giả định>> {
-  * id : BIGINT <<PK>>
+entity warehouses <<domain B>> {
+  * id       : BIGINT <<PK>>
   --
+  * code     : VARCHAR(20) <<UK>>
+  * status   : VARCHAR(20)
   ...
 }
 
-entity locations <<domain B - giả định>> {
-  * id : BIGINT <<PK>>
+entity locations <<domain B>> {
+  * id             : BIGINT <<PK>>
   --
-  * warehouse_id : BIGINT <<FK>>
-  * location_type : VARCHAR(20)
+  * warehouse_id   : BIGINT <<FK>>
+  parent_id        : BIGINT <<FK self>>
+  * location_type  : VARCHAR(10)
+  * purpose        : VARCHAR(20)
+  * is_pickable    : BOOLEAN
+  * is_active      : BOOLEAN
   ...
 }
 
 note right of locations
-  Cần domain B xác nhận location_type có giá trị
-  "IN_TRANSIT" cho hàng đang chuyển kho (Transfer),
-  và danh sách location_type dùng BIGINT làm PK để
-  khớp với inventory.location_id ở đây.
+  location_type: ZONE / AISLE / RACK / BIN
+  purpose: RECEIVING / STORAGE / PICKING / STAGING / QC / DAMAGED
+  (đề xuất thêm TRANSIT - chờ domain B xác nhận)
+
+  "RECV" không phải location_type riêng - là 1 BIN có purpose = RECEIVING.
 end note
 
-' Domain C - ĐÃ CÓ, dùng đúng làm chuẩn tham chiếu
-entity skus <<domain C - ĐÃ CÓ>> {
-  * id : BIGINT <<PK>>
+entity skus <<domain C>> {
+  * id                : BIGINT <<PK>>
   --
-  * sku_code : VARCHAR(50) <<UK>>
-  * base_uom_id : BIGINT <<FK>>
-  * is_lot_tracked : BOOLEAN
+  * sku_code          : VARCHAR(50) <<UK>>
+  * base_uom_id       : BIGINT <<FK>>
+  * is_lot_tracked    : BOOLEAN
   * is_serial_tracked : BOOLEAN
   ...
 }
 
 note right of skus
-  ĐÃ ĐỒNG BỘ: inventory.sku_id = BIGINT,
-  khớp với skus.id (BIGINT) của domain C - join được.
-
-  Số lượng LUÔN lưu theo base_uom_id của SKU
-  (Business Rule domain C: không đổi Base UOM sau khi
-  SKU đã phát sinh tồn kho).
+  Số lượng trong inventory luôn theo base_uom_id.
+  Base UOM không đổi sau khi SKU đã có tồn kho.
+  lot_no/expiry_date chỉ bắt buộc khi is_lot_tracked = true (BR-D-09).
 end note
 
-' Quan hệ
 warehouses  ||--o{ inventory : "1 kho - N dòng tồn"
 locations   ||--o{ inventory : "1 vị trí (BIN) - N dòng tồn"
 skus        ||--o{ inventory : "1 sku - N dòng tồn"
