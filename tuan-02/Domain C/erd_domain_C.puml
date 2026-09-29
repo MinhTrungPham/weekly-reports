@@ -51,12 +51,10 @@ entity skus {
 ' =========================================================
 
 entity sku_uom_conversions {
-    * id : BIGINT <<PK>>
-    ' UNIQUE (sku_id, uom_id)
     ' CHECK (factor_to_base > 0)
     --
-    * sku_id : BIGINT <<FK>>
-    * uom_id : BIGINT <<FK>>
+    * sku_id : BIGINT <<PK, FK>>
+    * uom_id : BIGINT <<PK, FK>>
     * factor_to_base : DECIMAL(18,4)
     --
     * created_at : TIMESTAMP
@@ -132,11 +130,11 @@ skus ||--o{ sku_uom_conversions : "sku_id"
 uoms ||--o{ sku_uom_conversions : "uom_id"
 
 ' SKU - Barcode
-skus ||--o{ sku_barcodes : "sku_id"
-uoms ||--o{ sku_barcodes : "uom_id"
 
 ' SKU - Supplier
 skus ||--o{ sku_suppliers : "sku_id"
 suppliers ||--o{ sku_suppliers : "supplier_id"
 
 @enduml
+' SKU UOM Conversion - Barcode
+sku_uom_conversions ||--o{ sku_barcodes : "(sku_id, uom_id)"
