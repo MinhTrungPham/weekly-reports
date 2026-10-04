@@ -36,7 +36,7 @@ Mỗi cá nhân / nhóm nhỏ trong team sẽ demo luồng nghiệp vụ tương
 
 ---
 
-## 3. Danh sách UI cần có để phục vụ Demo
+## 3. Danh sách UI
 
 - **Màn hình Nhập hàng**:
   - Giao diện Supervisor: Tạo phiếu nhập, phân công người nhận.
@@ -49,12 +49,16 @@ Mỗi cá nhân / nhóm nhỏ trong team sẽ demo luồng nghiệp vụ tương
 - **Màn hình Quản lý Nhà cung cấp**:
   - Giao diện Admin/Manager: Thêm, sửa, xóa, tìm kiếm Nhà cung cấp (Suppliers).
   - Giao diện chi tiết: Danh sách các Sku của nhà cung cấp.
+- **Giao diện Hiển thị & In mã QR (Dành cho Hàng hóa)**:
+  - Tại Màn hình Chi tiết SKU hoặc Nhận hàng, cạnh mỗi dòng đơn vị tính (trừ `base_uom`), ví dụ như Hộp, Thùng, bố trí một nút icon 🖨️ hoặc 👁️ (View QR).
+  - **Thiết kế dạng Popup/Modal**: Khi bấm vào icon, một Modal (Popup) sẽ hiện lên chứa hình ảnh QR to rõ nét kèm thông tin vắn tắt (Tên SKU, UOM, và Số lượng quy đổi ra base UOM).
+  - Dưới ảnh QR là nút "In tem nhãn" để nhân viên kho có thể in và dán lên thùng/hộp sản phẩm.
 
 ---
 
 ## 4. Danh sách chi tiết API & DTO đề xuất (Cho các luồng tự chọn)
 
-Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các Module kèm theo **chi tiết tác động CSDL (DB Tables)**:
+Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các Module kèm theo **chi tiết tác động CSDL (DB Tables)** và **định dạng Request/Response**:
 
 ### 4.1. Phân hệ Nhập hàng & Cất hàng (Inbound / Putaway)
 
@@ -83,14 +87,30 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 }
 ```
 
+* **Response:**
+
+```json
+{
+  "statusCode": 201,
+  "message": "Receipt created successfully",
+  "data": {
+    "id": "1",
+    "code": "RC-20261010-001",
+    "status": "ASSIGNED"
+  }
+}
+```
+
 **b. Xác nhận nhận hàng / Cất hàng (Receive & Putaway)**
 
 * **Endpoint:** `POST /api/receipts/{id}/receive`
 * **Tác động DB (Bắt buộc dùng Transaction):**
   * **`receipts`**: Cập nhật trạng thái (`status`) thành `COMPLETED`.
   * **`receipt_lines`**: Cập nhật số lượng nhận thực tế (`received_qty`) và vị trí cất hàng (`target_location_id`).
-  * **`inventory`**: Lấy tồn kho hiện tại lên cộng thêm `received_qty` (`UPDATE qty_on_hand = qty_on_hand + X`). Nếu chưa có dòng tồn kho cho SKU/Location này thì tạo mới (`INSERT`).
-  * **`stock_ledger`**: Thêm mới 1 dòng ghi vết lịch sử giao dịch (loại RECEIPT, số lượng `qty_change` > 0).
+  * **`inventory`**: Lấy tồn kho hiện tại lên cộng thêm `received_qty`. Nếu chưa có dòng tồn kho cho SKU/Location này thì tạo mới (`INSERT`).
+  * **`stock_ledger`**: Thêm mới 1 dòng ghi vết lịch sử giao dịch (loại RECEIPT).
+  * `sku_barcodes`: Kiểm tra mã barcode, nếu chưa có thì tạo mới.
+  * `sku_suppliers`: Bổ sung mối quan hệ nếu là lần đầu.
 * **Request (`ReceiveReceiptRequest`):**
 
 ```json
@@ -105,6 +125,16 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 }
 ```
 
+* **Response:**
+
+```json
+{
+  "statusCode": 200,
+  "message": "Receipt received and putaway successfully",
+  "data": null
+}
+```
+
 ### 4.2. Phân hệ Điều chỉnh tồn kho có phê duyệt (Adjustment)
 
 **a. Tạo đề xuất điều chỉnh (Create Adjustment Draft)**
@@ -112,7 +142,7 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 * **Endpoint:** `POST /api/adjustments`
 * **Tác động DB:**
   * Tạo mới phiếu ở bảng `adjustments` với trạng thái `PENDING_APPROVAL`.
-  * Ghi chi tiết chênh lệch vào bảng `adjustment_lines` gồm số lượng trên hệ thống (`system_qty`), số thực tế (`actual_qty`), độ lệch (`qty_change`).
+  * Ghi chi tiết chênh lệch vào bảng `adjustment_lines`.
 * **Request (`CreateAdjustmentRequest`):**
 
 ```json
@@ -131,13 +161,42 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 }
 ```
 
+* **Response:**
+
+```json
+{
+  "statusCode": 201,
+  "message": "Adjustment draft created",
+  "data": {
+    "id": "1",
+    "code": "ADJ-2026-001",
+    "status": "PENDING_APPROVAL"
+  }
+}
+```
+
 **b. Duyệt phiếu điều chỉnh (Approve Adjustment)**
 
 * **Endpoint:** `POST /api/adjustments/{id}/approve`
 * **Tác động DB (Bắt buộc dùng Transaction):**
-  * **`adjustments`**: Cập nhật trạng thái thành `APPROVED`, điền người duyệt (`approved_by`) và thời gian duyệt.
+  * **`adjustments`**: Cập nhật trạng thái thành `APPROVED`.
   * **`inventory`**: Cập nhật cộng/trừ số lượng `qty_on_hand` theo đúng số `qty_change`.
-  * **`stock_ledger`**: Ghi thêm 1 dòng lịch sử (loại hình ADJUST_IN nếu tăng hoặc ADJUST_OUT nếu giảm).
+  * **`stock_ledger`**: Ghi thêm 1 dòng lịch sử (ADJUST_IN hoặc ADJUST_OUT).
+* **Request:** `(Empty Body - Chỉ cần truyền Path param id)`
+
+```json
+{}
+```
+
+* **Response:**
+
+```json
+{
+  "statusCode": 200,
+  "message": "Adjustment approved successfully, inventory updated",
+  "data": null
+}
+```
 
 ### 4.3. Phân hệ Kiểm kê (Cycle Count)
 
@@ -146,7 +205,7 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 * **Endpoint:** `POST /api/cycle-counts`
 * **Tác động DB:**
   * Tạo bảng ghi đợt kiểm kê ở `cycle_counts` (Trạng thái: `ASSIGNED`).
-  * Quét danh sách các mã SKU trong vùng kiểm kê để tạo các dòng `cycle_count_lines` chứa số liệu `system_qty` đang có tại thời điểm bắt đầu đếm.
+  * Quét danh sách các mã SKU trong vùng kiểm kê để tạo các dòng `cycle_count_lines`.
 * **Request (`CreateCycleCountRequest`):**
 
 ```json
@@ -157,13 +216,25 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 }
 ```
 
+* **Response:**
+
+```json
+{
+  "statusCode": 201,
+  "message": "Cycle count session created",
+  "data": {
+    "id": "1",
+    "code": "CC-2026-001"
+  }
+}
+```
+
 **b. Nộp kết quả kiểm đếm (Submit Count)**
 
 * **Endpoint:** `POST /api/cycle-counts/{id}/count`
 * **Tác động DB:**
-  * **`cycle_count_lines`**: Cập nhật số lượng đếm được (`counted_qty`) và tự động tính ra `difference_qty`.
-  * **`cycle_counts`**: Cập nhật trạng thái đợt đếm thành `COMPLETED` (hoặc `REVIEWING`).
-  * *(Hệ thống có thể tự động sinh ra một bản ghi trong `adjustments` dựa trên chênh lệch này để chờ Manager duyệt).*
+  * **`cycle_count_lines`**: Cập nhật số lượng đếm được (`counted_qty`) và tính ra `difference_qty`.
+  * **`cycle_counts`**: Cập nhật trạng thái thành `COMPLETED`.
 * **Request (`SubmitCountRequest`):**
 
 ```json
@@ -178,30 +249,154 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 }
 ```
 
-### 4.4. Phân hệ Mã QR 
+* **Response:**
 
-**a. Render / Generate QR Code**
+```json
+{
+  "statusCode": 200,
+  "message": "Cycle count submitted successfully",
+  "data": null
+}
+```
 
-* **Endpoint:** `GET /api/qrcodes/location/{locationId}` hoặc `GET /api/qrcodes/sku/{skuId}`
-* **Tác động DB:** Chỉ Query bảng `locations` hoặc `skus` để lấy thông tin. Không tác động thay đổi DB.
-* **Response:** Trả về file định dạng Image/PNG hoặc chuỗi Base64.
+### 4.4. Phân hệ Mã QR
+
+**Get BarCode cho Hàng hóa (SKU & UOM)**
+
+* **Endpoint:** `GET /api/qrcodes/sku/{skuId}/uom/{uomId}` (hoặc truyền qua Query Params)
+* **Tác động DB:** Query bảng `sku_barcodes` để lấy chuỗi barcode gốc, đồng thời join với bảng `skus` và `uoms` để lấy thông tin chi tiết phục vụ hiển thị lên UI Modal. Không thay đổi DB.
+* **Request:** `(Truyền qua Path Params, không có Body)`
+* **Response:**
+
+```json
+{
+  "statusCode": 200,
+  "message": "Success",
+  "data": {
+    "barcode": "8935244876541",
+    "skuCode": "SKU-001",
+    "skuName": "Dế Mèn Phiêu Lưu Ký",
+    "uomName": "Hộp",
+    "baseUomName": "Cuốn",
+    "factorToBase": 10
+  }
+}
+```
 
 ### 4.5. Phân hệ Quản lý Nhà cung cấp & Đối tác (Suppliers)
 
 **a. Quản lý Danh sách Nhà cung cấp (CRUD Suppliers)**
 
-* **Endpoint:**
-  * `GET /api/suppliers` (Lấy danh sách, phân trang, tìm kiếm)
-  * `POST /api/suppliers` (Tạo nhà cung cấp mới)
-  * `GET /api/suppliers/{id}` (Xem chi tiết)
-  * `PUT /api/suppliers/{id}` (Cập nhật thông tin)
-* **Tác động DB:** Tương tác trực tiếp (Thêm/Sửa/Đọc) bảng `suppliers`.
+* **Tạo nhà cung cấp mới**
+
+  * **Endpoint:** `POST /api/suppliers`
+  * **Request:**
+
+  ```json
+  {
+    "code": "SUP-001",
+    "name": "Nhà xuất bản Kim Đồng",
+    "taxCode": "0101234567",
+    "contact": "contact@kimdong.com.vn"
+  }
+  ```
+
+  * **Response:**
+
+  ```json
+  {
+    "statusCode": 201,
+    "message": "Supplier created",
+    "data": { "id": "1" }
+  }
+  ```
+* **Lấy danh sách nhà cung cấp**
+
+  * **Endpoint:** `GET /api/suppliers?page=1&limit=10&search=kim`
+  * **Request:** `(Query Params)`
+  * **Response:**
+
+  ```json
+  {
+    "statusCode": 200,
+    "data": [
+      {
+        "id": "1",
+        "code": "SUP-001",
+        "name": "Nhà xuất bản Kim Đồng",
+        "taxCode": "0101234567",
+        "contact": "contact@kimdong.com.vn",
+        "status": "ACTIVE"
+      }
+    ],
+    "meta": { "total": 1, "page": 1, "limit": 10 }
+  }
+  ```
+* **Xem chi tiết nhà cung cấp**
+
+  * **Endpoint:** `GET /api/suppliers/{id}`
+  * **Request:** `(Path Param)`
+  * **Response:**
+
+  ```json
+  {
+    "statusCode": 200,
+    "data": {
+      "id": "1",
+      "code": "SUP-001",
+      "name": "Nhà xuất bản Kim Đồng",
+      "taxCode": "0101234567",
+      "contact": "contact@kimdong.com.vn",
+      "status": "ACTIVE"
+    }
+  }
+  ```
+* **Cập nhật nhà cung cấp**
+
+  * **Endpoint:** `PUT /api/suppliers/{id}`
+  * **Request:**
+
+  ```json
+  {
+    "name": "NXB Kim Đồng (Updated)",
+    "taxCode": "0101234568",
+    "contact": "new-contact@kimdong.com.vn",
+    "status": "INACTIVE"
+  }
+  ```
+
+  * **Response:**
+
+  ```json
+  {
+    "statusCode": 200,
+    "message": "Supplier updated",
+    "data": null
+  }
+  ```
 
 **b. Quản lý mã SKU của Nhà cung cấp (SKU Suppliers)**
 
-* **Endpoint:**
-  * `GET /api/suppliers/{id}/skus` (Lấy các mặt hàng nhà cung cấp này phân phối)
-* **Tác động DB:** Tương tác trực tiếp bảng `sku_suppliers`.
+* **Lấy các mặt hàng nhà cung cấp phân phối**
+  * **Endpoint:** `GET /api/suppliers/{id}/skus`
+  * **Request:** `(Path Param)`
+  * **Response:**
+
+  ```json
+  {
+    "statusCode": 200,
+    "data": [
+      {
+        "skuId": "1",
+        "skuCode": "SKU-001",
+        "skuName": "Dế Mèn Phiêu Lưu Ký",
+        "supplierSkuCode": "KD-001",
+        "baseUomName": "Cuốn",
+        "isPreferred": true
+      }
+    ]
+  }
+  ```
 
 ---
 
@@ -210,3 +405,18 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 1. **Transaction & Rollback:** Tại bước `POST /api/receipts/{id}/receive` và API duyệt Adjustment, đây là những API tác động trực tiếp lên tiền tài/hàng hóa, bắt buộc phải dùng **DB Transaction**. Nếu lỗi ở bước ghi `stock_ledger`, `inventory` không được phép tăng.
 2. **Tránh ghi đè/Dữ liệu rác:** Phiếu nhập trạng thái `COMPLETED` thì không được phép bấm Nhận hàng nữa. Các hàm validate nghiệp vụ (Check status) phải đặt lên hàng đầu.
 3. **Kế thừa API:** Các API tra cứu dữ liệu (Warehouse, Location, SKU) đã xong ở Tuần 2 nên tận dụng triệt để để thiết kế các Combo-box, Dropdown cho màn hình tạo Phiếu tuần này.
+
+
+---
+
+## 6. Phân công nhiệm vụ Tuần 3
+
+Để đảm bảo tiến độ cho buổi Demo, công việc tuần này được chia như sau:
+
+| Thành viên | Trách nhiệm | Phân hệ phụ trách | Chi tiết công việc |
+| :--- | :--- | :--- | :--- |
+| **Vy Tran** | **Frontend (UI/UX)** | **Toàn bộ UI (Mục 3)** | Xây dựng tất cả các màn hình giao diện: Nhập hàng, Kiểm kê, Điều chỉnh, Sổ cái, Quản lý Nhà cung cấp và Modal in mã QR. Tích hợp gọi API từ Backend. |
+| **Nam Nguyen** | **Backend (API)** | **Mục 4.1 & 4.2** | Viết API luồng **Nhập hàng & Cất hàng** (/api/receipts) và **Điều chỉnh tồn kho** (/api/adjustments). Lưu ý xử lý chặt chẽ DB Transaction cho inventory và stock_ledger. |
+| **Thuan Le** | **Backend (API)** | **Mục 4.3 & 4.4** | Viết API luồng **Kiểm kê** (/api/cycle-counts) và API xuất dữ liệu phục vụ render **Mã QR** (/api/qrcodes). |
+| **Trung Pham** | **Backend (API)** | **Mục 4.5** | Viết toàn bộ API CRUD cho **Nhà cung cấp & Đối tác** (/api/suppliers), bao gồm cả API map mã SKU với nhà cung cấp. |
+
