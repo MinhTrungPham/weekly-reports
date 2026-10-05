@@ -40,7 +40,7 @@ partition "RECEIVER" {
     :Kiểm tra SKU\n(Stock Keeping Unit);
     :Kiểm tra số lượng;
     :Kiểm tra UOM\n(Unit of Measure);
-    :Kiểm tra Lot / Expiry nếu có;
+    :Kiểm tra Lot / Expiry;
 }
 
 if (Thông tin hợp lệ?) then (Có)

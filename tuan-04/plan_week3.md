@@ -40,7 +40,7 @@ Mỗi cá nhân / nhóm nhỏ trong team sẽ demo luồng nghiệp vụ tương
 
 - **Màn hình Nhập hàng**:
   - Giao diện Supervisor: Tạo phiếu nhập, phân công người nhận.
-  - Giao diện Receiver: Nhận việc, điền số lượng nhận, chọn Location cất hàng.
+  - Giao diện Receiver: Nhận việc, điền số lượng nhận, chọn Location cất hàng. **Bắt buộc nhập Lô (Lot No) và Ngày hết hạn (Expiry Date)** nếu sản phẩm yêu cầu quản lý lô.
 - **Màn hình Kiểm kê & Điều chỉnh**:
   - Giao diện Supervisor: Khởi tạo đợt kiểm kê, giao việc.
   - Giao diện Inspector: Màn hình nhập số lượng đếm, nút "Tạo đề xuất điều chỉnh".
@@ -107,23 +107,26 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 * **Tác động DB (Bắt buộc dùng Transaction):**
   * **`receipts`**: Cập nhật trạng thái (`status`) thành `COMPLETED`.
   * **`receipt_lines`**: Cập nhật số lượng nhận thực tế (`received_qty`) và vị trí cất hàng (`target_location_id`).
-  * **`inventory`**: Lấy tồn kho hiện tại lên cộng thêm `received_qty`. Nếu chưa có dòng tồn kho cho SKU/Location này thì tạo mới (`INSERT`).
+  * **`inventory`**: Lấy tồn kho hiện tại lên cộng thêm `received_qty` dựa trên **Unique Key: (`location_id`, `sku_id`, `lot_no`, `serial_no`)**. Nếu chưa có dòng tồn kho thì tạo mới (`INSERT`) và lưu kèm `expiry_date`.
   * **`stock_ledger`**: Thêm mới 1 dòng ghi vết lịch sử giao dịch (loại RECEIPT).
   * `sku_barcodes`: Kiểm tra mã barcode, nếu chưa có thì tạo mới.
   * `sku_suppliers`: Bổ sung mối quan hệ nếu là lần đầu.
 * **Request (`ReceiveReceiptRequest`):**
-
 ```json
 {
   "lines": [
     {
       "receiptLineId": "1",
       "receivedQty": 100,
-      "targetLocationId": "10"
+      "targetLocationId": "10",
+      "lotNo": "LOT20261005",
+      "serialNo": "SN-001",
+      "expiryDate": "2027-10-05"
     }
   ]
 }
 ```
+*(Ghi chú: `lotNo`, `serialNo`, `expiryDate` là các trường tùy chọn, chỉ bắt buộc nếu bảng `skus` có `is_lot_tracked` hoặc `is_serial_tracked` = true).*
 
 * **Response:**
 
@@ -154,6 +157,8 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
       "locationId": "10",
       "skuId": "1",
       "uomId": "1",
+      "lotNo": "LOT20261005",
+      "serialNo": "SN-001",
       "systemQty": 100,
       "actualQty": 98
     }
@@ -243,6 +248,8 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
     {
       "locationId": "10",
       "skuId": "1",
+      "lotNo": "LOT20261005",
+      "serialNo": "SN-001",
       "countedQty": 98
     }
   ]
