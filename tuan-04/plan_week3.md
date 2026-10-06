@@ -41,14 +41,14 @@ Mỗi cá nhân / nhóm nhỏ trong team sẽ demo luồng nghiệp vụ tương
 - **Màn hình Nhập hàng**:
   - Giao diện Supervisor: Tạo phiếu nhập, phân công người nhận.
   - Giao diện Receiver: Nhận việc, điền số lượng nhận, chọn Location cất hàng. **Bắt buộc nhập Lô (Lot No) và Ngày hết hạn (Expiry Date)** nếu sản phẩm yêu cầu quản lý lô.
-- **Màn hình Kiểm kê & Điều chỉnh**:
-  - Giao diện Supervisor: Khởi tạo đợt kiểm kê, giao việc.
-  - Giao diện Inspector: Màn hình nhập số lượng đếm, nút "Tạo đề xuất điều chỉnh".
-  - Giao diện Manager: Xem danh sách đề xuất, nút Duyệt / Từ chối.
-- **Màn hình Tồn kho & Sổ cái**: View số lượng (Inventory) và Sổ cái (Stock Ledger) để đối soát.
-- **Màn hình Quản lý Nhà cung cấp**:
-  - Giao diện Admin/Manager: Thêm, sửa, xóa, tìm kiếm Nhà cung cấp (Suppliers).
-  - Giao diện chi tiết: Danh sách các Sku của nhà cung cấp.
+- **Màn hình Kiểm kê & Điều chỉnh:**
+  - **Giao diện Supervisor: Khởi tạo đợt kiểm kê, giao việc.**
+  - **Giao diện Inspector: Màn hình nhập số lượng đếm, nút "Tạo đề xuất điều chỉnh".**
+  - **Giao diện Manager: Xem danh sách đề xuất, nút Duyệt / Từ chối.**
+- **Màn hình Tồn kho & Sổ cái: View số lượng (Inventory) và Sổ cái (Stock Ledger) để đối soát.**
+- **Màn hình Quản lý Nhà cung cấp:**
+  - **Giao diện Admin/Manager: Thêm, sửa, xóa, tìm kiếm Nhà cung cấp (Suppliers).**
+  - **Giao diện chi tiết: Danh sách các Sku của nhà cung cấp.**
 - **Giao diện Hiển thị & In mã QR (Dành cho Hàng hóa)**:
   - Tại Màn hình Chi tiết SKU hoặc Nhận hàng, cạnh mỗi dòng đơn vị tính (trừ `base_uom`), ví dụ như Hộp, Thùng, bố trí một nút icon 🖨️ hoặc 👁️ (View QR).
   - **Thiết kế dạng Popup/Modal**: Khi bấm vào icon, một Modal (Popup) sẽ hiện lên chứa hình ảnh QR to rõ nét kèm thông tin vắn tắt (Tên SKU, UOM, và Số lượng quy đổi ra base UOM).
@@ -111,7 +111,9 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
   * **`stock_ledger`**: Thêm mới 1 dòng ghi vết lịch sử giao dịch (loại RECEIPT).
   * `sku_barcodes`: Kiểm tra mã barcode, nếu chưa có thì tạo mới.
   * `sku_suppliers`: Bổ sung mối quan hệ nếu là lần đầu.
+  * **Kiểm tra lại khối lượng tối đa của Bin nếu có**
 * **Request (`ReceiveReceiptRequest`):**
+
 ```json
 {
   "lines": [
@@ -126,6 +128,7 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
   ]
 }
 ```
+
 *(Ghi chú: `lotNo`, `serialNo`, `expiryDate` là các trường tùy chọn, chỉ bắt buộc nếu bảng `skus` có `is_lot_tracked` hoặc `is_serial_tracked` = true).*
 
 * **Response:**
@@ -385,6 +388,7 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 **b. Quản lý mã SKU của Nhà cung cấp (SKU Suppliers)**
 
 * **Lấy các mặt hàng nhà cung cấp phân phối**
+
   * **Endpoint:** `GET /api/suppliers/{id}/skus`
   * **Request:** `(Path Param)`
   * **Response:**
@@ -413,17 +417,15 @@ Dựa trên thứ tự tự chọn, dưới đây là thiết kế API cho các 
 2. **Tránh ghi đè/Dữ liệu rác:** Phiếu nhập trạng thái `COMPLETED` thì không được phép bấm Nhận hàng nữa. Các hàm validate nghiệp vụ (Check status) phải đặt lên hàng đầu.
 3. **Kế thừa API:** Các API tra cứu dữ liệu (Warehouse, Location, SKU) đã xong ở Tuần 2 nên tận dụng triệt để để thiết kế các Combo-box, Dropdown cho màn hình tạo Phiếu tuần này.
 
-
 ---
 
 ## 6. Phân công nhiệm vụ Tuần 3
 
 Để đảm bảo tiến độ cho buổi Demo, công việc tuần này được chia như sau:
 
-| Thành viên | Trách nhiệm | Phân hệ phụ trách | Chi tiết công việc |
-| :--- | :--- | :--- | :--- |
-| **Vy Tran** | **Frontend (UI/UX)** | **Toàn bộ UI (Mục 3)** | Xây dựng tất cả các màn hình giao diện: Nhập hàng, Kiểm kê, Điều chỉnh, Sổ cái, Quản lý Nhà cung cấp và Modal in mã QR. Tích hợp gọi API từ Backend. |
-| **Nam Nguyen** | **Backend (API)** | **Mục 4.1 & 4.2** | Viết API luồng **Nhập hàng & Cất hàng** (/api/receipts) và **Điều chỉnh tồn kho** (/api/adjustments). Lưu ý xử lý chặt chẽ DB Transaction cho inventory và stock_ledger. |
-| **Thuan Le** | **Backend (API)** | **Mục 4.3 & 4.4** | Viết API luồng **Kiểm kê** (/api/cycle-counts) và API xuất dữ liệu phục vụ render **Mã QR** (/api/qrcodes). |
-| **Trung Pham** | **Backend (API)** | **Mục 4.5** | Viết toàn bộ API CRUD cho **Nhà cung cấp & Đối tác** (/api/suppliers), bao gồm cả API map mã SKU với nhà cung cấp. |
-
+| Thành viên         | Trách nhiệm              | Phân hệ phụ trách           | Chi tiết công việc                                                                                                                                                                                  |
+| :------------------- | :------------------------- | :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vy Tran**    | **Frontend (UI/UX)** | **Toàn bộ UI (Mục 3)** | Xây dựng tất cả các màn hình giao diện: Nhập hàng, Kiểm kê, Điều chỉnh, Sổ cái, Quản lý Nhà cung cấp và Modal in mã QR. Tích hợp gọi API từ Backend.                        |
+| **Nam Nguyen** | **Backend (API)**    | **Mục 4.1 & 4.2**        | Viết API luồng **Nhập hàng & Cất hàng** (/api/receipts) và **Điều chỉnh tồn kho** (/api/adjustments). Lưu ý xử lý chặt chẽ DB Transaction cho inventory và stock_ledger. |
+| **Thuan Le**   | **Backend (API)**    | **Mục 4.3 & 4.4**        | Viết API luồng **Kiểm kê** (/api/cycle-counts) và API xuất dữ liệu phục vụ render **Mã QR** (/api/qrcodes).                                                                     |
+| **Trung Pham** | **Backend (API)**    | **Mục 4.5**              | Viết toàn bộ API CRUD cho **Nhà cung cấp & Đối tác** (/api/suppliers), bao gồm cả API map mã SKU với nhà cung cấp.                                                                 |

@@ -1,0 +1,4050 @@
+{
+  "sourceFolder": "D:\\LazTar\\Tài Liệu\\drive-download-20261005T041822Z-1-001",
+  "diagrams": [
+    {
+      "name": "inbound_putaway",
+      "title": "BPMN — Nhập hàng và cất hàng",
+      "subtitle": "Thiết kế hệ thống theo bộ tài liệu 05/10 + contract tuần 3 phần Nam; mỗi dòng nhận/cất một lần.",
+      "width": 3100,
+      "height": 850,
+      "lanes": [
+        "Supervisor",
+        "Receiver",
+        "Hệ thống BE + DB"
+      ],
+      "notes": [
+        "Service task transaction: status + receipt_lines + inventory + INSERT ledger cùng commit; lỗi rollback toàn bộ thao tác.",
+        "Lỗi trả về để sửa/thử lại; phiếu không tự CANCELLED. 409 do trạng thái: tải lại phiếu trước khi tiếp tục.",
+        "Lot / serial / expiry theo policy SKU; quantity quy đổi base UOM; giữ cùng scope kho và người được giao."
+      ],
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Create",
+          "text": "Tạo / giao phiếu\nKho, NCC, SKU, UOM",
+          "x": 210,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "CheckCreate",
+          "text": "Xác thực + quyền/scope\nMaster active; Receiver hợp lệ\nLưu NEW / ASSIGNED",
+          "x": 465,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "CreateOK",
+          "text": "Hợp lệ?",
+          "x": 715,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "CreateRetry",
+          "text": "Sửa dữ liệu / giao Receiver\nNEW chưa được receive",
+          "x": 465,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Receive",
+          "text": "Nhập qty, lot/serial/expiry\nChọn BIN RECEIVING",
+          "x": 825,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "CheckReceive",
+          "text": "ASSIGNED + đúng assignee\nBIN/kho; policy; qty ≤ dự kiến\nQuy đổi Decimal, snapshot",
+          "x": 1080,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "ReceiveOK",
+          "text": "Hợp lệ?",
+          "x": 1330,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "ReceiveTx",
+          "text": "Transaction nhận\nRECEIPT +base qty\nStatus RECEIVED",
+          "x": 1430,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "ReceiveCommit",
+          "text": "Commit?",
+          "x": 1675,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "ReceiveRetry",
+          "text": "Đọc lỗi / tải lại phiếu\nSửa dữ liệu hoặc thử lại",
+          "x": 1080,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Putaway",
+          "text": "Chọn BIN STORAGE\nCất toàn bộ lượng đã nhận",
+          "x": 1790,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "CheckPutaway",
+          "text": "RECEIVED + assignee/scope\nBIN active cùng kho\nTồn RECEIVING đủ",
+          "x": 2045,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "PutawayOK",
+          "text": "Hợp lệ?",
+          "x": 2295,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "PutawayTx",
+          "text": "Transaction cất\nPUTAWAY_OUT / IN\nStatus COMPLETED",
+          "x": 2395,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "PutawayCommit",
+          "text": "Commit?",
+          "x": 2640,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "PutawayRetry",
+          "text": "Đọc lỗi / tải lại phiếu\nSửa BIN hoặc thử lại",
+          "x": 2045,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 2900,
+          "y": 537,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Create",
+          "text": ""
+        },
+        {
+          "from": "Create",
+          "to": "CheckCreate",
+          "text": "POST receipts"
+        },
+        {
+          "from": "CheckCreate",
+          "to": "CreateOK",
+          "text": ""
+        },
+        {
+          "from": "CreateOK",
+          "to": "Receive",
+          "text": "ASSIGNED"
+        },
+        {
+          "from": "CreateOK",
+          "to": "CreateRetry",
+          "text": "Lỗi / còn NEW",
+          "points": [
+            [
+              740,
+              530
+            ],
+            [
+              740,
+              260
+            ],
+            [
+              675,
+              260
+            ],
+            [
+              675,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "CreateRetry",
+          "to": "Create",
+          "text": "Sửa / assign",
+          "points": [
+            [
+              465,
+              187
+            ],
+            [
+              420,
+              187
+            ]
+          ]
+        },
+        {
+          "from": "Receive",
+          "to": "CheckReceive",
+          "text": "POST receive"
+        },
+        {
+          "from": "CheckReceive",
+          "to": "ReceiveOK",
+          "text": ""
+        },
+        {
+          "from": "ReceiveOK",
+          "to": "ReceiveTx",
+          "text": "Có"
+        },
+        {
+          "from": "ReceiveOK",
+          "to": "ReceiveRetry",
+          "text": "Không",
+          "points": [
+            [
+              1355,
+              530
+            ],
+            [
+              1355,
+              377
+            ],
+            [
+              1290,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "ReceiveRetry",
+          "to": "Receive",
+          "text": "Thử lại",
+          "points": [
+            [
+              1080,
+              377
+            ],
+            [
+              1035,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "ReceiveTx",
+          "to": "ReceiveCommit",
+          "text": ""
+        },
+        {
+          "from": "ReceiveCommit",
+          "to": "Putaway",
+          "text": "200; RECEIVED"
+        },
+        {
+          "from": "ReceiveCommit",
+          "to": "ReceiveRetry",
+          "text": "Rollback / lỗi",
+          "points": [
+            [
+              1700,
+              580
+            ],
+            [
+              1700,
+              655
+            ],
+            [
+              1185,
+              655
+            ],
+            [
+              1185,
+              419
+            ]
+          ]
+        },
+        {
+          "from": "Putaway",
+          "to": "CheckPutaway",
+          "text": "POST putaway"
+        },
+        {
+          "from": "CheckPutaway",
+          "to": "PutawayOK",
+          "text": ""
+        },
+        {
+          "from": "PutawayOK",
+          "to": "PutawayTx",
+          "text": "Có"
+        },
+        {
+          "from": "PutawayOK",
+          "to": "PutawayRetry",
+          "text": "Không",
+          "points": [
+            [
+              2320,
+              530
+            ],
+            [
+              2320,
+              377
+            ],
+            [
+              2255,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "PutawayRetry",
+          "to": "Putaway",
+          "text": "Thử lại",
+          "points": [
+            [
+              2045,
+              377
+            ],
+            [
+              2000,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "PutawayTx",
+          "to": "PutawayCommit",
+          "text": ""
+        },
+        {
+          "from": "PutawayCommit",
+          "to": "End",
+          "text": "200; COMPLETED"
+        },
+        {
+          "from": "PutawayCommit",
+          "to": "PutawayRetry",
+          "text": "Rollback / lỗi",
+          "points": [
+            [
+              2665,
+              580
+            ],
+            [
+              2665,
+              655
+            ],
+            [
+              2150,
+              655
+            ],
+            [
+              2150,
+              419
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "adjustment_approval",
+      "title": "BPMN — Điều chỉnh tồn kho có phê duyệt",
+      "subtitle": "Inspector tạo snapshot → submit → người có ADJUSTMENT.APPROVE/REJECT trong kho xét duyệt; không tự duyệt.",
+      "width": 3000,
+      "height": 850,
+      "lanes": [
+        "Inspector / proposer",
+        "WH_MANAGER / reviewer",
+        "Hệ thống BE + DB"
+      ],
+      "notes": [
+        "Approve dùng version + system_qty từ DB, không tin client. ADJUST_OUT không được giảm tồn dưới reserved hoặc dưới 0.",
+        "Commit gồm inventory + INSERT ledger + audit + APPROVED. Reject/cancel không thay đổi tồn.",
+        "Snapshot stale: 409, proposer hủy và lập mới; không tự tính lại delta. Submit/approve lỗi kỹ thuật có thể thử lại."
+      ],
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "DraftInput",
+          "text": "Chọn inventoryId\nactualQty base + reason",
+          "x": 210,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "SaveDraft",
+          "text": "Quyền + scope + owner\nSnapshot identity/qty/version\nLưu DRAFT",
+          "x": 470,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "DraftOK",
+          "text": "Hợp lệ?",
+          "x": 725,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "DraftRetry",
+          "text": "Sửa dữ liệu đề xuất",
+          "x": 470,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "SubmitInput",
+          "text": "Rà soát / sửa DRAFT\nGửi duyệt",
+          "x": 830,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "SubmitCheck",
+          "text": "Owner + DRAFT\nKiểm tra snapshot\nPENDING_APPROVAL",
+          "x": 1090,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "SubmitOK",
+          "text": "Snapshot đúng?",
+          "x": 1345,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "Stale",
+          "text": "409: Hủy đề xuất\nKiểm đếm / lập phiếu mới",
+          "x": 1090,
+          "y": 145,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Review",
+          "text": "Xem chênh lệch / reason\nApprove hoặc Reject",
+          "x": 1460,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "ReviewGuard",
+          "text": "Quyền đúng kho từ DB\nReviewer ≠ proposer\nPENDING_APPROVAL",
+          "x": 1720,
+          "y": 520,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Decision",
+          "text": "Kết quả?",
+          "x": 1970,
+          "y": 530,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "Reject",
+          "text": "Lưu rejection_reason\nStatus REJECTED\nKhông ghi movement",
+          "x": 2070,
+          "y": 610,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 65,
+          "lane": 2
+        },
+        {
+          "id": "Approve",
+          "text": "Kiểm tra snapshot/reserved\nTx: ADJUST_IN / OUT + tồn\nAudit + APPROVED",
+          "x": 2070,
+          "y": 490,
+          "type": "serviceTask",
+          "w": 210,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Committed",
+          "text": "Commit?",
+          "x": 2330,
+          "y": 505,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "ReviewRetry",
+          "text": "Lỗi quyền/trạng thái/DB\nTải lại; xử lý rồi thử lại",
+          "x": 1720,
+          "y": 335,
+          "type": "userTask",
+          "w": 210,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "EndApprove",
+          "text": "APPROVED",
+          "x": 2620,
+          "y": 512,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        },
+        {
+          "id": "EndReject",
+          "text": "REJECTED",
+          "x": 2620,
+          "y": 622,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "DraftInput",
+          "text": ""
+        },
+        {
+          "from": "DraftInput",
+          "to": "SaveDraft",
+          "text": "POST adjustments"
+        },
+        {
+          "from": "SaveDraft",
+          "to": "DraftOK",
+          "text": ""
+        },
+        {
+          "from": "DraftOK",
+          "to": "SubmitInput",
+          "text": "201; DRAFT"
+        },
+        {
+          "from": "DraftOK",
+          "to": "DraftRetry",
+          "text": "Lỗi",
+          "points": [
+            [
+              750,
+              530
+            ],
+            [
+              750,
+              260
+            ],
+            [
+              680,
+              260
+            ],
+            [
+              680,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "DraftRetry",
+          "to": "DraftInput",
+          "text": "Sửa",
+          "points": [
+            [
+              470,
+              187
+            ],
+            [
+              420,
+              187
+            ]
+          ]
+        },
+        {
+          "from": "SubmitInput",
+          "to": "SubmitCheck",
+          "text": "POST submit"
+        },
+        {
+          "from": "SubmitCheck",
+          "to": "SubmitOK",
+          "text": ""
+        },
+        {
+          "from": "SubmitOK",
+          "to": "Review",
+          "text": "Có"
+        },
+        {
+          "from": "SubmitOK",
+          "to": "Stale",
+          "text": "409: stale",
+          "points": [
+            [
+              1370,
+              530
+            ],
+            [
+              1370,
+              187
+            ],
+            [
+              1300,
+              187
+            ]
+          ]
+        },
+        {
+          "from": "Stale",
+          "to": "DraftInput",
+          "text": "Cancel + tạo mới",
+          "points": [
+            [
+              1195,
+              145
+            ],
+            [
+              1195,
+              120
+            ],
+            [
+              315,
+              120
+            ],
+            [
+              315,
+              145
+            ]
+          ]
+        },
+        {
+          "from": "Review",
+          "to": "ReviewGuard",
+          "text": "POST approve / reject"
+        },
+        {
+          "from": "ReviewGuard",
+          "to": "Decision",
+          "text": ""
+        },
+        {
+          "from": "Decision",
+          "to": "Approve",
+          "text": "Approve",
+          "points": [
+            [
+              2020,
+              555
+            ],
+            [
+              2045,
+              555
+            ],
+            [
+              2045,
+              532
+            ],
+            [
+              2070,
+              532
+            ]
+          ]
+        },
+        {
+          "from": "Decision",
+          "to": "Reject",
+          "text": "Reject + reason",
+          "points": [
+            [
+              1995,
+              580
+            ],
+            [
+              1995,
+              642
+            ],
+            [
+              2070,
+              642
+            ]
+          ]
+        },
+        {
+          "from": "Decision",
+          "to": "ReviewRetry",
+          "text": "Lỗi quyền / trạng thái",
+          "points": [
+            [
+              1995,
+              530
+            ],
+            [
+              1995,
+              377
+            ],
+            [
+              1930,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "ReviewRetry",
+          "to": "Review",
+          "text": "Thử lại",
+          "points": [
+            [
+              1720,
+              377
+            ],
+            [
+              1670,
+              377
+            ]
+          ]
+        },
+        {
+          "from": "Approve",
+          "to": "Committed",
+          "text": ""
+        },
+        {
+          "from": "Committed",
+          "to": "EndApprove",
+          "text": "Có"
+        },
+        {
+          "from": "Committed",
+          "to": "Stale",
+          "text": "409: stale",
+          "points": [
+            [
+              2355,
+              505
+            ],
+            [
+              2355,
+              275
+            ],
+            [
+              1195,
+              275
+            ],
+            [
+              1195,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "Committed",
+          "to": "ReviewRetry",
+          "text": "Rollback / lỗi khác",
+          "points": [
+            [
+              2355,
+              555
+            ],
+            [
+              2355,
+              695
+            ],
+            [
+              1825,
+              695
+            ],
+            [
+              1825,
+              419
+            ]
+          ]
+        },
+        {
+          "from": "Reject",
+          "to": "EndReject",
+          "text": "Không đổi tồn"
+        }
+      ]
+    },
+    {
+      "name": "dfd_context",
+      "title": "DFD — Context (Process 0): WMS",
+      "subtitle": "Ranh giới phần mềm; mũi tên biểu diễn dữ liệu, không biểu diễn việc di chuyển hàng vật lý.",
+      "width": 1700,
+      "height": 950,
+      "notes": [
+        "E1/E2/E3 là nhóm người dùng ngoài phần mềm, không phải các service. Context không hiển thị data store nội bộ.",
+        "Supplier/khách hàng chưa có tích hợp trực tiếp được xác nhận: dữ liệu chứng từ do nhân viên E2 nhập.",
+        "Các chức năng Outbound/Transfer/Cycle Count là phạm vi thiết kế; sơ đồ không xác nhận code đã triển khai."
+      ],
+      "nodes": [
+        {
+          "id": "E1",
+          "text": "E1 — ADMIN\nQuản trị hệ thống",
+          "x": 100,
+          "y": 190,
+          "type": "external",
+          "w": 260,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "E2",
+          "text": "E2 — Nhân viên vận hành\nWH_MANAGER / SUPERVISOR\nRECEIVER / PICKER / INSPECTOR",
+          "x": 100,
+          "y": 490,
+          "type": "external",
+          "w": 290,
+          "h": 130,
+          "lane": 2
+        },
+        {
+          "id": "E3",
+          "text": "E3 — VIEWER\nTra cứu tồn khả dụng",
+          "x": 1260,
+          "y": 340,
+          "type": "external",
+          "w": 280,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "P0",
+          "text": "0 — HỆ THỐNG WMS\nXác thực, danh mục, chứng từ\nTồn kho và sổ cái",
+          "x": 650,
+          "y": 355,
+          "type": "process",
+          "w": 340,
+          "h": 140,
+          "lane": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P0",
+          "text": "Định danh; lệnh quản trị\nUser/RBAC, danh mục",
+          "points": [
+            [
+              360,
+              225
+            ],
+            [
+              520,
+              225
+            ],
+            [
+              520,
+              385
+            ],
+            [
+              650,
+              385
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E1",
+          "text": "Token/kết quả đăng nhập\nKết quả quản trị / lỗi",
+          "points": [
+            [
+              650,
+              430
+            ],
+            [
+              460,
+              430
+            ],
+            [
+              460,
+              275
+            ],
+            [
+              360,
+              275
+            ]
+          ]
+        },
+        {
+          "from": "E2",
+          "to": "P0",
+          "text": "Định danh; dữ liệu nghiệp vụ\nNhập/xuất/chuyển/kiểm kê/duyệt\nTruy vấn danh mục, tồn, ledger",
+          "points": [
+            [
+              390,
+              525
+            ],
+            [
+              540,
+              525
+            ],
+            [
+              540,
+              465
+            ],
+            [
+              650,
+              465
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E2",
+          "text": "Token; phiếu/task/trạng thái\nDanh mục, tồn, ledger / lỗi",
+          "points": [
+            [
+              820,
+              495
+            ],
+            [
+              820,
+              675
+            ],
+            [
+              245,
+              675
+            ],
+            [
+              245,
+              620
+            ]
+          ]
+        },
+        {
+          "from": "E3",
+          "to": "P0",
+          "text": "Định danh; truy vấn\nDanh mục / tồn khả dụng",
+          "points": [
+            [
+              1260,
+              365
+            ],
+            [
+              1120,
+              365
+            ],
+            [
+              1120,
+              385
+            ],
+            [
+              990,
+              385
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E3",
+          "text": "Token; danh mục\nTồn khả dụng / lỗi",
+          "points": [
+            [
+              990,
+              460
+            ],
+            [
+              1140,
+              460
+            ],
+            [
+              1140,
+              415
+            ],
+            [
+              1260,
+              415
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dfd_level1",
+      "title": "DFD — Level 1: Phân rã hệ thống WMS",
+      "subtitle": "Process 1–5 là phân rã Process 0. Mọi lệnh bảo vệ cần context xác thực + permission/scope trước khi xử lý.",
+      "width": 2450,
+      "height": 1530,
+      "notes": [
+        "D1: RBAC; D2: danh mục; D3: chứng từ nghiệp vụ (bổ sung tuần 3); D4: tồn; D5: ledger append-only.",
+        "3.0 và 4.0 cùng DB transaction khi thay đổi on_hand: không commit phiếu trước rồi ghi tồn/ledger ở transaction khác.",
+        "D4 reserved chỉ cập nhật cho reserve/release, không INSERT D5. Tồn khả dụng tổng hợp lọc is_pickable, loại QC/DAMAGED."
+      ],
+      "nodes": [
+        {
+          "id": "E1",
+          "text": "E1 — ADMIN",
+          "x": 40,
+          "y": 160,
+          "type": "external",
+          "w": 220,
+          "h": 90,
+          "lane": 2
+        },
+        {
+          "id": "E2",
+          "text": "E2 — Vận hành kho",
+          "x": 40,
+          "y": 570,
+          "type": "external",
+          "w": 220,
+          "h": 90,
+          "lane": 2
+        },
+        {
+          "id": "E3",
+          "text": "E3 — VIEWER",
+          "x": 40,
+          "y": 1120,
+          "type": "external",
+          "w": 220,
+          "h": 90,
+          "lane": 2
+        },
+        {
+          "id": "P1",
+          "text": "1.0 — Xác thực / RBAC\nUser active, role/assignment active\nToken + permission/scope",
+          "x": 500,
+          "y": 140,
+          "type": "process",
+          "w": 300,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "P2",
+          "text": "2.0 — Quản trị / danh mục\nUser/RBAC; kho, BIN\nSKU, UOM, barcode, supplier",
+          "x": 1050,
+          "y": 140,
+          "type": "process",
+          "w": 320,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "P3",
+          "text": "3.0 — Chứng từ / workflow\nNhập/cất, xuất, chuyển\nKiểm kê, đề xuất/duyệt",
+          "x": 500,
+          "y": 565,
+          "type": "process",
+          "w": 300,
+          "h": 125,
+          "lane": 2
+        },
+        {
+          "id": "P4",
+          "text": "4.0 — Inventory + Ledger\nBase UOM; reserve/release\nMovement / reversal; audit",
+          "x": 1050,
+          "y": 570,
+          "type": "process",
+          "w": 320,
+          "h": 120,
+          "lane": 2
+        },
+        {
+          "id": "P5",
+          "text": "5.0 — Tra cứu / đối soát\nDanh mục, phiếu/task\nTồn theo scope; ledger",
+          "x": 500,
+          "y": 1110,
+          "type": "process",
+          "w": 300,
+          "h": 115,
+          "lane": 2
+        },
+        {
+          "id": "D1",
+          "text": "D1 — Users & RBAC\nusers / roles / permissions\nuser_roles / role_permissions",
+          "x": 1720,
+          "y": 140,
+          "type": "store",
+          "w": 370,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "D2",
+          "text": "D2 — Master data\nwarehouses / locations; SKU/UOM\nconversion / barcode / suppliers",
+          "x": 1720,
+          "y": 405,
+          "type": "store",
+          "w": 370,
+          "h": 115,
+          "lane": 2
+        },
+        {
+          "id": "D3",
+          "text": "D3 — Chứng từ nghiệp vụ\nreceipts/lines, adjustments/lines\nshipment/count (scope thiết kế)",
+          "x": 1720,
+          "y": 730,
+          "type": "store",
+          "w": 370,
+          "h": 115,
+          "lane": 2
+        },
+        {
+          "id": "D4",
+          "text": "D4 — Inventory\nBIN/SKU/lot/serial/expiry\non_hand / reserved / version",
+          "x": 1720,
+          "y": 1000,
+          "type": "store",
+          "w": 370,
+          "h": 110,
+          "lane": 2
+        },
+        {
+          "id": "D5",
+          "text": "D5 — Stock ledger\nmovement/reference types\nINSERT movement; không UPDATE/DELETE",
+          "x": 1720,
+          "y": 1250,
+          "type": "store",
+          "w": 400,
+          "h": 110,
+          "lane": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P1",
+          "text": "Định danh đăng nhập"
+        },
+        {
+          "from": "E2",
+          "to": "P1",
+          "text": "Định danh",
+          "points": [
+            [
+              260,
+              590
+            ],
+            [
+              350,
+              590
+            ],
+            [
+              350,
+              225
+            ],
+            [
+              500,
+              225
+            ]
+          ]
+        },
+        {
+          "from": "E3",
+          "to": "P1",
+          "text": "Định danh",
+          "points": [
+            [
+              260,
+              1140
+            ],
+            [
+              310,
+              1140
+            ],
+            [
+              310,
+              190
+            ],
+            [
+              500,
+              190
+            ]
+          ]
+        },
+        {
+          "from": "P1",
+          "to": "E1",
+          "text": "Token / lỗi",
+          "points": [
+            [
+              500,
+              150
+            ],
+            [
+              410,
+              150
+            ],
+            [
+              410,
+              130
+            ],
+            [
+              150,
+              130
+            ],
+            [
+              150,
+              160
+            ]
+          ]
+        },
+        {
+          "from": "P1",
+          "to": "E2",
+          "text": "Token / lỗi",
+          "points": [
+            [
+              500,
+              250
+            ],
+            [
+              390,
+              250
+            ],
+            [
+              390,
+              635
+            ],
+            [
+              260,
+              635
+            ]
+          ]
+        },
+        {
+          "from": "P1",
+          "to": "E3",
+          "text": "Token / lỗi",
+          "points": [
+            [
+              650,
+              250
+            ],
+            [
+              650,
+              290
+            ],
+            [
+              290,
+              290
+            ],
+            [
+              290,
+              1190
+            ],
+            [
+              260,
+              1190
+            ]
+          ]
+        },
+        {
+          "from": "D1",
+          "to": "P1",
+          "text": "Account + role/permission/scope",
+          "points": [
+            [
+              1720,
+              185
+            ],
+            [
+              1550,
+              185
+            ],
+            [
+              1550,
+              100
+            ],
+            [
+              650,
+              100
+            ],
+            [
+              650,
+              140
+            ]
+          ]
+        },
+        {
+          "from": "E1",
+          "to": "P2",
+          "text": "Lệnh quản trị / danh mục",
+          "points": [
+            [
+              260,
+              200
+            ],
+            [
+              430,
+              200
+            ],
+            [
+              430,
+              310
+            ],
+            [
+              1210,
+              310
+            ],
+            [
+              1210,
+              250
+            ]
+          ]
+        },
+        {
+          "from": "P2",
+          "to": "E1",
+          "text": "Kết quả / lỗi",
+          "points": [
+            [
+              1050,
+              150
+            ],
+            [
+              970,
+              150
+            ],
+            [
+              970,
+              115
+            ],
+            [
+              200,
+              115
+            ],
+            [
+              200,
+              160
+            ]
+          ]
+        },
+        {
+          "from": "P2",
+          "to": "D1",
+          "text": "Thay đổi User/RBAC"
+        },
+        {
+          "from": "P2",
+          "to": "D2",
+          "text": "Thay đổi danh mục",
+          "points": [
+            [
+              1370,
+              230
+            ],
+            [
+              1480,
+              230
+            ],
+            [
+              1480,
+              445
+            ],
+            [
+              1720,
+              445
+            ]
+          ]
+        },
+        {
+          "from": "D2",
+          "to": "P2",
+          "text": "Danh mục hiện tại",
+          "points": [
+            [
+              1720,
+              485
+            ],
+            [
+              1420,
+              485
+            ],
+            [
+              1420,
+              205
+            ],
+            [
+              1370,
+              205
+            ]
+          ]
+        },
+        {
+          "from": "E2",
+          "to": "P3",
+          "text": "Dữ liệu nghiệp vụ"
+        },
+        {
+          "from": "P3",
+          "to": "E2",
+          "text": "Phiếu/task/trạng thái / lỗi",
+          "points": [
+            [
+              500,
+              670
+            ],
+            [
+              430,
+              670
+            ],
+            [
+              430,
+              725
+            ],
+            [
+              150,
+              725
+            ],
+            [
+              150,
+              660
+            ]
+          ]
+        },
+        {
+          "from": "D2",
+          "to": "P3",
+          "text": "SKU/UOM/BIN/supplier",
+          "points": [
+            [
+              1720,
+              520
+            ],
+            [
+              940,
+              520
+            ],
+            [
+              940,
+              590
+            ],
+            [
+              800,
+              590
+            ]
+          ]
+        },
+        {
+          "from": "P3",
+          "to": "D3",
+          "text": "Phiếu, phân công, snapshot/status",
+          "points": [
+            [
+              800,
+              645
+            ],
+            [
+              930,
+              645
+            ],
+            [
+              930,
+              760
+            ],
+            [
+              1720,
+              760
+            ]
+          ]
+        },
+        {
+          "from": "D3",
+          "to": "P3",
+          "text": "Phiếu/task/snapshot hiện tại",
+          "points": [
+            [
+              1720,
+              815
+            ],
+            [
+              870,
+              815
+            ],
+            [
+              870,
+              670
+            ],
+            [
+              800,
+              670
+            ]
+          ]
+        },
+        {
+          "from": "P3",
+          "to": "P4",
+          "text": "Lệnh movement / reserve\nActor + reference + tx"
+        },
+        {
+          "from": "P4",
+          "to": "P3",
+          "text": "Kết quả tồn/ledger hoặc lỗi",
+          "points": [
+            [
+              1050,
+              690
+            ],
+            [
+              1000,
+              690
+            ],
+            [
+              1000,
+              710
+            ],
+            [
+              650,
+              710
+            ],
+            [
+              650,
+              690
+            ]
+          ]
+        },
+        {
+          "from": "D4",
+          "to": "P4",
+          "text": "Tồn/version/reserved",
+          "points": [
+            [
+              1720,
+              1030
+            ],
+            [
+              1490,
+              1030
+            ],
+            [
+              1490,
+              660
+            ],
+            [
+              1370,
+              660
+            ]
+          ]
+        },
+        {
+          "from": "P4",
+          "to": "D4",
+          "text": "Cập nhật tồn / reserved / version",
+          "points": [
+            [
+              1370,
+              615
+            ],
+            [
+              1560,
+              615
+            ],
+            [
+              1560,
+              1080
+            ],
+            [
+              1720,
+              1080
+            ]
+          ]
+        },
+        {
+          "from": "P4",
+          "to": "D5",
+          "text": "INSERT movement / reversal",
+          "points": [
+            [
+              1210,
+              690
+            ],
+            [
+              1210,
+              1320
+            ],
+            [
+              1720,
+              1320
+            ]
+          ]
+        },
+        {
+          "from": "D5",
+          "to": "P4",
+          "text": "Ledger gốc khi reversal",
+          "points": [
+            [
+              1720,
+              1275
+            ],
+            [
+              1450,
+              1275
+            ],
+            [
+              1450,
+              585
+            ],
+            [
+              1370,
+              585
+            ]
+          ]
+        },
+        {
+          "from": "E2",
+          "to": "P5",
+          "text": "Truy vấn kho / phiếu / tồn / ledger",
+          "points": [
+            [
+              150,
+              660
+            ],
+            [
+              150,
+              1020
+            ],
+            [
+              570,
+              1020
+            ],
+            [
+              570,
+              1110
+            ]
+          ]
+        },
+        {
+          "from": "E3",
+          "to": "P5",
+          "text": "Truy vấn danh mục / tồn khả dụng"
+        },
+        {
+          "from": "P5",
+          "to": "E3",
+          "text": "Danh mục / tồn khả dụng / lỗi",
+          "points": [
+            [
+              500,
+              1200
+            ],
+            [
+              430,
+              1200
+            ],
+            [
+              430,
+              1285
+            ],
+            [
+              150,
+              1285
+            ],
+            [
+              150,
+              1210
+            ]
+          ]
+        },
+        {
+          "from": "P5",
+          "to": "E2",
+          "text": "Kết quả tra cứu theo quyền",
+          "points": [
+            [
+              500,
+              1135
+            ],
+            [
+              370,
+              1135
+            ],
+            [
+              370,
+              780
+            ],
+            [
+              190,
+              780
+            ],
+            [
+              190,
+              660
+            ]
+          ]
+        },
+        {
+          "from": "D2",
+          "to": "P5",
+          "text": "Danh mục",
+          "points": [
+            [
+              1720,
+              465
+            ],
+            [
+              1630,
+              465
+            ],
+            [
+              1630,
+              880
+            ],
+            [
+              720,
+              880
+            ],
+            [
+              720,
+              1110
+            ]
+          ]
+        },
+        {
+          "from": "D3",
+          "to": "P5",
+          "text": "Phiếu / task",
+          "points": [
+            [
+              1720,
+              790
+            ],
+            [
+              1570,
+              790
+            ],
+            [
+              1570,
+              925
+            ],
+            [
+              750,
+              925
+            ],
+            [
+              750,
+              1110
+            ]
+          ]
+        },
+        {
+          "from": "D4",
+          "to": "P5",
+          "text": "Tồn theo BIN; tính available",
+          "points": [
+            [
+              1720,
+              1050
+            ],
+            [
+              970,
+              1050
+            ],
+            [
+              970,
+              1140
+            ],
+            [
+              800,
+              1140
+            ]
+          ]
+        },
+        {
+          "from": "D5",
+          "to": "P5",
+          "text": "Ledger theo scope",
+          "points": [
+            [
+              1720,
+              1340
+            ],
+            [
+              930,
+              1340
+            ],
+            [
+              930,
+              1190
+            ],
+            [
+              800,
+              1190
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "access_rbac",
+      "title": "BPMN — Đăng nhập, token và phân quyền",
+      "subtitle": "Áp dụng cho mọi role. Mỗi API bảo vệ kiểm tra lại user ACTIVE và assignment/role ACTIVE.",
+      "lanes": [
+        "Người dùng",
+        "Hệ thống BE",
+        "DB / RBAC"
+      ],
+      "width": 3000,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Login",
+          "text": "Nhập username hoặc email\nVà password",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "CheckIdentity",
+          "text": "Tìm account; kiểm tra hash\nChặn inactive/locked\nĐịnh danh mơ hồ → 401",
+          "x": 500,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "LoginOK",
+          "text": "Đăng nhập đúng?",
+          "x": 785,
+          "y": 335,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 1
+        },
+        {
+          "id": "Tokens",
+          "text": "Cấp access + refresh\nClaim tokenType; secret riêng",
+          "x": 1070,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Request",
+          "text": "Gọi API với access token\nHoặc refresh khi hết hạn",
+          "x": 1355,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Verify",
+          "text": "Verify signature/expiry/type\nRefresh: user ACTIVE → token\nAPI: đọc user/role/permission",
+          "x": 1640,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Permission",
+          "text": "Permission và scope kho\nTrên cùng assignment active\nĐọc kho từ bản ghi thực tế",
+          "x": 1925,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Allowed",
+          "text": "Được phép?",
+          "x": 2210,
+          "y": 335,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 1
+        },
+        {
+          "id": "Execute",
+          "text": "Thực thi nghiệp vụ\nGhi actor/audit từ user\nTrả response / lỗi nghiệp vụ",
+          "x": 2495,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 2780,
+          "y": 359,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 1
+        },
+        {
+          "id": "Exception_0",
+          "text": "401 chung\nSửa thông tin đăng nhập",
+          "x": 875,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        },
+        {
+          "id": "Exception_1",
+          "text": "401 hoặc 403\nKhông chạy nghiệp vụ",
+          "x": 2300,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        },
+        {
+          "id": "EndException_1",
+          "text": "Từ chối",
+          "x": 2575,
+          "y": 250,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Login",
+          "text": ""
+        },
+        {
+          "from": "Login",
+          "to": "CheckIdentity",
+          "text": ""
+        },
+        {
+          "from": "CheckIdentity",
+          "to": "LoginOK",
+          "text": ""
+        },
+        {
+          "from": "LoginOK",
+          "to": "Tokens",
+          "text": "Có"
+        },
+        {
+          "from": "Tokens",
+          "to": "Request",
+          "text": ""
+        },
+        {
+          "from": "Request",
+          "to": "Verify",
+          "text": ""
+        },
+        {
+          "from": "Verify",
+          "to": "Permission",
+          "text": ""
+        },
+        {
+          "from": "Permission",
+          "to": "Allowed",
+          "text": ""
+        },
+        {
+          "from": "Allowed",
+          "to": "Execute",
+          "text": "Có"
+        },
+        {
+          "from": "Execute",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "LoginOK",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              810,
+              385
+            ],
+            [
+              810,
+              268
+            ],
+            [
+              875,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "Login",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              997.5,
+              300
+            ],
+            [
+              997.5,
+              680
+            ],
+            [
+              327.5,
+              680
+            ],
+            [
+              327.5,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "Allowed",
+          "to": "Exception_1",
+          "text": "Không",
+          "points": [
+            [
+              2235,
+              385
+            ],
+            [
+              2235,
+              268
+            ],
+            [
+              2300,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_1",
+          "to": "EndException_1",
+          "text": ""
+        }
+      ],
+      "notes": [
+        "Thiếu/sai/hết hạn/sai loại token: 401; thiếu permission hoặc scope: 403. Refresh không tự thu hồi token cũ.",
+        "Login/refresh là xác thực; gán role yêu cầu ADMIN toàn hệ thống theo policy code hiện tại."
+      ]
+    },
+    {
+      "name": "master_data",
+      "title": "BPMN — Quản trị và quản lý danh mục",
+      "subtitle": "Các loại request độc lập: không bắt user phải tạo kho/SKU trước mỗi lần vận hành.",
+      "lanes": [
+        "ADMIN / người có quyền",
+        "Hệ thống BE",
+        "DB danh mục / RBAC"
+      ],
+      "width": 2430,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Input",
+          "text": "Tạo/sửa/ngưng hoạt động\nUser/RBAC, kho/vị trí, SKU/UOM\nSupplier, barcode/conversion",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Authorize",
+          "text": "Xác thực; permission + scope\nTạo/ngưng kho: ADMIN\nUser/RBAC: policy global",
+          "x": 500,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Load",
+          "text": "Đọc bản ghi + tham chiếu\nTồn, ledger, cây vị trí\nUser-role và master liên quan",
+          "x": 785,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Rules",
+          "text": "Unique code; FK; cây cùng kho\nHệ số > 0; barcode unique\nBase UOM/code sau giao dịch",
+          "x": 1070,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Valid",
+          "text": "Hợp lệ?",
+          "x": 1355,
+          "y": 335,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 1
+        },
+        {
+          "id": "Save",
+          "text": "Transaction + audit\nMaster đã tham chiếu: inactive\nKhông hard-delete lịch sử",
+          "x": 1640,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Result",
+          "text": "Trả ID / dữ liệu / trạng thái\nFE cập nhật danh sách",
+          "x": 1925,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 2210,
+          "y": 359,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 1
+        },
+        {
+          "id": "Exception_0",
+          "text": "400 / 403 / 404 / 409\nKhông ghi DB; sửa request",
+          "x": 1445,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Input",
+          "text": ""
+        },
+        {
+          "from": "Input",
+          "to": "Authorize",
+          "text": ""
+        },
+        {
+          "from": "Authorize",
+          "to": "Load",
+          "text": ""
+        },
+        {
+          "from": "Load",
+          "to": "Rules",
+          "text": ""
+        },
+        {
+          "from": "Rules",
+          "to": "Valid",
+          "text": ""
+        },
+        {
+          "from": "Valid",
+          "to": "Save",
+          "text": "Có"
+        },
+        {
+          "from": "Save",
+          "to": "Result",
+          "text": ""
+        },
+        {
+          "from": "Result",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "Valid",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              1380,
+              385
+            ],
+            [
+              1380,
+              268
+            ],
+            [
+              1445,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "Input",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              1567.5,
+              300
+            ],
+            [
+              1567.5,
+              680
+            ],
+            [
+              327.5,
+              680
+            ],
+            [
+              327.5,
+              229
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Tổng hợp rule A/B/C: user ACTIVE, scope; cấu trúc ZONE/AISLE/RACK/BIN; không deactivate BIN/SKU còn tồn.",
+        "Mã permission cụ thể theo catalog hiện hành; không suy ra Manager có mọi quyền từ tên role."
+      ]
+    },
+    {
+      "name": "outbound_shipping",
+      "title": "BPMN — Xuất hàng: Reserve, Pick và Ship",
+      "subtitle": "LUỒNG THIẾT KẾ. Tài liệu có PICK_OUT/PICK_IN/SHIP; chưa khẳng định đã có đủ API.",
+      "lanes": [
+        "Supervisor / người điều phối",
+        "Picker / người xác nhận xuất",
+        "Hệ thống BE + DB"
+      ],
+      "width": 3285,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Order",
+          "text": "Tạo yêu cầu xuất\nSKU, base qty, kho",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Validate",
+          "text": "Quyền/scope; đọc tồn khả dụng\nChỉ BIN is_pickable\nKhông chọn QC/DAMAGED",
+          "x": 500,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Enough",
+          "text": "Đủ tồn?",
+          "x": 785,
+          "y": 525,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "Reserve",
+          "text": "Tx giữ chỗ theo dòng tồn\nreserved += qty; version tăng\nKhông ghi stock ledger",
+          "x": 1070,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Assign",
+          "text": "Giao task cho Picker\nĐúng kho, ACTIVE",
+          "x": 1355,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "Pick",
+          "text": "Nhận task, quét/lấy hàng\nBáo số thực lấy / shortage",
+          "x": 1640,
+          "y": 335,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Picked",
+          "text": "Đủ lượng đã giao?",
+          "x": 1925,
+          "y": 525,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "PickTx",
+          "text": "Tx: STORAGE → STAGING\nPICK_OUT / PICK_IN\nGiảm reserved nguồn cùng tx",
+          "x": 2210,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "ShipInput",
+          "text": "Xác nhận giao/xuất\nNgười có quyền SHIP tương ứng",
+          "x": 2495,
+          "y": 335,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "ShipTx",
+          "text": "Tx: SHIP trừ STAGING\nGhi ledger + trạng thái xuất\nKhông trừ STORAGE lần hai",
+          "x": 2780,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 3065,
+          "y": 549,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        },
+        {
+          "id": "Exception_0",
+          "text": "Báo thiếu tồn\nĐiều chỉnh đơn / chờ bổ sung",
+          "x": 875,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        },
+        {
+          "id": "Exception_1",
+          "text": "Ghi nhận shortage\nSupervisor xử lý lại task",
+          "x": 2015,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Order",
+          "text": ""
+        },
+        {
+          "from": "Order",
+          "to": "Validate",
+          "text": ""
+        },
+        {
+          "from": "Validate",
+          "to": "Enough",
+          "text": ""
+        },
+        {
+          "from": "Enough",
+          "to": "Reserve",
+          "text": "Có"
+        },
+        {
+          "from": "Reserve",
+          "to": "Assign",
+          "text": ""
+        },
+        {
+          "from": "Assign",
+          "to": "Pick",
+          "text": ""
+        },
+        {
+          "from": "Pick",
+          "to": "Picked",
+          "text": ""
+        },
+        {
+          "from": "Picked",
+          "to": "PickTx",
+          "text": "Có"
+        },
+        {
+          "from": "PickTx",
+          "to": "ShipInput",
+          "text": ""
+        },
+        {
+          "from": "ShipInput",
+          "to": "ShipTx",
+          "text": ""
+        },
+        {
+          "from": "ShipTx",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "Enough",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              810,
+              575
+            ],
+            [
+              810,
+              268
+            ],
+            [
+              875,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "Order",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              997.5,
+              300
+            ],
+            [
+              997.5,
+              680
+            ],
+            [
+              327.5,
+              680
+            ],
+            [
+              327.5,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "Picked",
+          "to": "Exception_1",
+          "text": "Không",
+          "points": [
+            [
+              1950,
+              575
+            ],
+            [
+              1950,
+              268
+            ],
+            [
+              2015,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_1",
+          "to": "Assign",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              2137.5,
+              300
+            ],
+            [
+              2137.5,
+              658
+            ],
+            [
+              1467.5,
+              658
+            ],
+            [
+              1467.5,
+              229
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Pick là chuyển vị trí: tổng kho không đổi. Ship trừ STAGING: tổng kho giảm đúng lượng giao.",
+        "Thiếu hàng: báo Supervisor, không tự ghi đủ. Partial/cancel, chọn lô và FEFO cần contract riêng.",
+        "Tài liệu kiểm thử ghi “PICK/SHIP -30” còn mơ hồ; sơ đồ chọn phân tách theo movement types và ghi chú này."
+      ]
+    },
+    {
+      "name": "warehouse_transfer",
+      "title": "BPMN — Điều chuyển giữa hai kho",
+      "subtitle": "LUỒNG THIẾT KẾ. TRANSIT vẫn là đề xuất chưa được Domain B xác nhận; không vẽ ghi tồn transit như đã chốt.",
+      "lanes": [
+        "Supervisor / kho nguồn",
+        "Picker nguồn / Receiver đích",
+        "Hệ thống BE + DB"
+      ],
+      "width": 3000,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "CreateTransfer",
+          "text": "Tạo yêu cầu điều chuyển\nKho nguồn/đích; SKU/lot/qty",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "CheckTransfer",
+          "text": "Quyền từng kho, BIN, UOM\nĐọc tồn nguồn + reserved\nBảo toàn identity và expiry",
+          "x": 500,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "ValidTransfer",
+          "text": "Hợp lệ?",
+          "x": 785,
+          "y": 525,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "AssignTransfer",
+          "text": "Giao Picker nguồn\nVà Receiver tại kho đích",
+          "x": 1070,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "PrepareTransfer",
+          "text": "Picker kiểm đếm / chuẩn bị\nReceiver xác nhận hàng tới",
+          "x": 1355,
+          "y": 335,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "SameCount",
+          "text": "Số lượng khớp?",
+          "x": 1640,
+          "y": 525,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "TransitDecision",
+          "text": "CHƯA CHỐT: hàng in-transit\nChọn BIN TRANSIT hay tracking\nĐịnh nghĩa thời điểm ghi tồn",
+          "x": 1925,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "TransferTx",
+          "text": "Khi contract được chốt:\nTx nguồn OUT / đích IN\nTồn + ledger + audit + phiếu",
+          "x": 2210,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "EndTransfer",
+          "text": "Trả trạng thái hoàn tất\nĐối soát hai kho",
+          "x": 2495,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 2780,
+          "y": 549,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        },
+        {
+          "id": "Exception_0",
+          "text": "Từ chối / sửa yêu cầu\nKhông ghi movement",
+          "x": 875,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        },
+        {
+          "id": "Exception_1",
+          "text": "Báo chênh lệch / thiếu hàng\nSupervisor điều phối",
+          "x": 1730,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "CreateTransfer",
+          "text": ""
+        },
+        {
+          "from": "CreateTransfer",
+          "to": "CheckTransfer",
+          "text": ""
+        },
+        {
+          "from": "CheckTransfer",
+          "to": "ValidTransfer",
+          "text": ""
+        },
+        {
+          "from": "ValidTransfer",
+          "to": "AssignTransfer",
+          "text": "Có"
+        },
+        {
+          "from": "AssignTransfer",
+          "to": "PrepareTransfer",
+          "text": ""
+        },
+        {
+          "from": "PrepareTransfer",
+          "to": "SameCount",
+          "text": ""
+        },
+        {
+          "from": "SameCount",
+          "to": "TransitDecision",
+          "text": "Có"
+        },
+        {
+          "from": "TransitDecision",
+          "to": "TransferTx",
+          "text": ""
+        },
+        {
+          "from": "TransferTx",
+          "to": "EndTransfer",
+          "text": ""
+        },
+        {
+          "from": "EndTransfer",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "ValidTransfer",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              810,
+              575
+            ],
+            [
+              810,
+              268
+            ],
+            [
+              875,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "CreateTransfer",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              997.5,
+              300
+            ],
+            [
+              997.5,
+              680
+            ],
+            [
+              327.5,
+              680
+            ],
+            [
+              327.5,
+              229
+            ]
+          ]
+        },
+        {
+          "from": "SameCount",
+          "to": "Exception_1",
+          "text": "Không",
+          "points": [
+            [
+              1665,
+              575
+            ],
+            [
+              1665,
+              268
+            ],
+            [
+              1730,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_1",
+          "to": "AssignTransfer",
+          "text": "Xử lý / thử lại",
+          "points": [
+            [
+              1852.5,
+              300
+            ],
+            [
+              1852.5,
+              658
+            ],
+            [
+              1182.5,
+              658
+            ],
+            [
+              1182.5,
+              229
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Bước CHƯA CHỐT là design gate: không được coi sơ đồ này là contract đủ để implement/deploy transfer.",
+        "Hai kho dùng cùng DB và chuyển tức thời có thể atomic OUT/IN; chuyển thực tế nhiều giờ phải chốt mô hình in-transit.",
+        "Không xóa tồn khỏi hệ thống trong khi hàng đang vận chuyển. Không tự cấp quyền kho đích từ role kho nguồn."
+      ]
+    },
+    {
+      "name": "cycle_count_inspection",
+      "title": "BPMN — Kiểm kê và kiểm tra chất lượng",
+      "subtitle": "Luồng team theo tài liệu mới; nối sang BPMN Adjustment. Không tự sửa inventory từ kết quả đếm.",
+      "lanes": [
+        "Supervisor",
+        "Inspector",
+        "Hệ thống BE + DB"
+      ],
+      "width": 2715,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "CreateCount",
+          "text": "Tạo phiên kiểm kê\nKho, BIN/SKU; giao Inspector",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "ValidateCount",
+          "text": "Quyền/scope; assignee ACTIVE\nĐọc inventoryId/lot/serial\nChốt thời điểm snapshot",
+          "x": 500,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "AssignCount",
+          "text": "Lưu phiên + danh sách dòng\nSnapshot qty/version\nGiao việc",
+          "x": 785,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Count",
+          "text": "Đếm thực tế base UOM\nKiểm tra lot/expiry/chất lượng\nGhi nhận theo dòng tồn",
+          "x": 1070,
+          "y": 335,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "SubmitCount",
+          "text": "Nộp kết quả; kiểm tra owner\nTính chênh lệch so snapshot\nLưu kết quả; không ghi ledger",
+          "x": 1355,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Difference",
+          "text": "Có chênh lệch?",
+          "x": 1640,
+          "y": 525,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 2
+        },
+        {
+          "id": "Proposal",
+          "text": "Inspector tạo Adjustment\ninventoryId + actualQty + reason\nTheo BPMN Điều chỉnh",
+          "x": 1925,
+          "y": 335,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "ReviewCount",
+          "text": "Theo dõi kết quả / xử lý\nChất lượng là hồ sơ riêng\nDuyệt tồn qua Adjustment",
+          "x": 2210,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 2495,
+          "y": 169,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Exception_0",
+          "text": "Hoàn tất kiểm kê\nKhông tạo Adjustment",
+          "x": 1730,
+          "y": 610,
+          "type": "serviceTask",
+          "w": 245,
+          "h": 65,
+          "lane": 2
+        },
+        {
+          "id": "EndException_0",
+          "text": "Khớp tồn",
+          "x": 2005,
+          "y": 625,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "CreateCount",
+          "text": ""
+        },
+        {
+          "from": "CreateCount",
+          "to": "ValidateCount",
+          "text": ""
+        },
+        {
+          "from": "ValidateCount",
+          "to": "AssignCount",
+          "text": ""
+        },
+        {
+          "from": "AssignCount",
+          "to": "Count",
+          "text": ""
+        },
+        {
+          "from": "Count",
+          "to": "SubmitCount",
+          "text": ""
+        },
+        {
+          "from": "SubmitCount",
+          "to": "Difference",
+          "text": ""
+        },
+        {
+          "from": "Difference",
+          "to": "Proposal",
+          "text": "Có"
+        },
+        {
+          "from": "Proposal",
+          "to": "ReviewCount",
+          "text": ""
+        },
+        {
+          "from": "ReviewCount",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "Difference",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              1665,
+              575
+            ],
+            [
+              1665,
+              643
+            ],
+            [
+              1730,
+              643
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "EndException_0",
+          "text": ""
+        }
+      ],
+      "notes": [
+        "Nếu không chênh lệch: hoàn tất kiểm kê, tồn/ledger không đổi. Review count không đồng nghĩa approve adjustment.",
+        "Schema/DTO Cycle Count phải thống nhất identity và thời điểm snapshot; chưa mặc định code đã đáp ứng.",
+        "Quarantine/QC/DAMAGED là bước thiết kế bổ sung nếu có chuyển hàng; muốn đổi vị trí phải dùng movement hợp lệ."
+      ]
+    },
+    {
+      "name": "lookup_reporting",
+      "title": "BPMN — Tra cứu tồn, sổ cái và mã hàng",
+      "subtitle": "Bao phủ Viewer và người vận hành; QR là tem SKU/UOM, không tự chứa lot/expiry khi payload chưa thiết kế.",
+      "lanes": [
+        "Viewer / nhân viên kho",
+        "Hệ thống BE",
+        "DB danh mục / tồn / ledger"
+      ],
+      "width": 2145,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Query",
+          "text": "Chọn kho/SKU/vị trí\nBộ lọc / phân trang / barcode\nHoặc yêu cầu tem QR SKU/UOM",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "AuthQuery",
+          "text": "Xác thực + quyền đọc\nTồn/ledger theo scope kho\nDanh mục chung theo policy",
+          "x": 500,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "ReadQuery",
+          "text": "Đọc inventory / locations\nSKU/UOM/conversion/barcode\nLedger nếu có quyền",
+          "x": 785,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "Compute",
+          "text": "Detail: on_hand - reserved\nSummary: chỉ BIN is_pickable\nLoại QC/DAMAGED",
+          "x": 1070,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Respond",
+          "text": "Trả ID/Decimal string\nDATE YYYY-MM-DD; timestamp UTC\nKết quả / meta / lỗi",
+          "x": 1355,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Display",
+          "text": "Xem / đối soát tồn và ledger\nRender QR, in tem nếu có dữ liệu",
+          "x": 1640,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 1925,
+          "y": 169,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Query",
+          "text": ""
+        },
+        {
+          "from": "Query",
+          "to": "AuthQuery",
+          "text": ""
+        },
+        {
+          "from": "AuthQuery",
+          "to": "ReadQuery",
+          "text": ""
+        },
+        {
+          "from": "ReadQuery",
+          "to": "Compute",
+          "text": ""
+        },
+        {
+          "from": "Compute",
+          "to": "Respond",
+          "text": ""
+        },
+        {
+          "from": "Respond",
+          "to": "Display",
+          "text": ""
+        },
+        {
+          "from": "Display",
+          "to": "End",
+          "text": ""
+        }
+      ],
+      "notes": [
+        "Tra cứu không tạo movement. QR render ở UI hoặc dịch vụ QR theo contract; không bắt buộc Cloudinary.",
+        "Dữ liệu row available khác tổng sellable: row QC vẫn có on_hand, nhưng không được cộng vào tổng pickable.",
+        "Viewer xem ledger hay không phụ thuộc permission catalog được team chốt; không suy ra từ tên role."
+      ]
+    },
+    {
+      "name": "ledger_reversal",
+      "title": "BPMN — Sửa sai bằng bút toán đảo",
+      "subtitle": "ADMIN hoặc người được cấp STOCK_LEDGER.REVERSE; không UPDATE/DELETE dòng sổ cái cũ.",
+      "lanes": [
+        "Người có quyền reversal",
+        "Hệ thống BE",
+        "DB inventory + ledger"
+      ],
+      "width": 2145,
+      "height": 870,
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Bắt đầu",
+          "x": 140,
+          "y": 175,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "SelectOriginal",
+          "text": "Chọn ledger gốc\nNhập lý do reversal",
+          "x": 215,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "CheckReversal",
+          "text": "Xác thực + permission/scope\nĐọc ledger gốc + inventory\nKhông đảo một reversal",
+          "x": 500,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "ReversalAllowed",
+          "text": "Được đảo?",
+          "x": 785,
+          "y": 335,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 1
+        },
+        {
+          "id": "ReverseTx",
+          "text": "Transaction: delta = -delta gốc\nTồn không âm / dưới reserved\nINSERT reversal_of_id + audit",
+          "x": 1070,
+          "y": 525,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 2
+        },
+        {
+          "id": "ReversalResult",
+          "text": "Trả ledger mới\nLedger cũ giữ nguyên\nĐối soát qty before/after",
+          "x": 1355,
+          "y": 335,
+          "type": "serviceTask",
+          "w": 225,
+          "h": 84,
+          "lane": 1
+        },
+        {
+          "id": "Correct",
+          "text": "Nếu cần ghi nghiệp vụ đúng:\nThực hiện luồng chứng từ hợp lệ\nKhông sửa trực tiếp tồn",
+          "x": 1640,
+          "y": 145,
+          "type": "userTask",
+          "w": 225,
+          "h": 84,
+          "lane": 0
+        },
+        {
+          "id": "End",
+          "text": "Hoàn tất",
+          "x": 1925,
+          "y": 169,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Exception_0",
+          "text": "Không tồn tại / đã đảo / lỗi quyền\nKhông thay đổi tồn hay ledger",
+          "x": 875,
+          "y": 235,
+          "type": "userTask",
+          "w": 245,
+          "h": 65,
+          "lane": 0
+        },
+        {
+          "id": "EndException_0",
+          "text": "Từ chối",
+          "x": 1150,
+          "y": 250,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "SelectOriginal",
+          "text": ""
+        },
+        {
+          "from": "SelectOriginal",
+          "to": "CheckReversal",
+          "text": ""
+        },
+        {
+          "from": "CheckReversal",
+          "to": "ReversalAllowed",
+          "text": ""
+        },
+        {
+          "from": "ReversalAllowed",
+          "to": "ReverseTx",
+          "text": "Có"
+        },
+        {
+          "from": "ReverseTx",
+          "to": "ReversalResult",
+          "text": ""
+        },
+        {
+          "from": "ReversalResult",
+          "to": "Correct",
+          "text": ""
+        },
+        {
+          "from": "Correct",
+          "to": "End",
+          "text": ""
+        },
+        {
+          "from": "ReversalAllowed",
+          "to": "Exception_0",
+          "text": "Không",
+          "points": [
+            [
+              810,
+              385
+            ],
+            [
+              810,
+              268
+            ],
+            [
+              875,
+              268
+            ]
+          ]
+        },
+        {
+          "from": "Exception_0",
+          "to": "EndException_0",
+          "text": ""
+        }
+      ],
+      "notes": [
+        "Mỗi ledger gốc chỉ đảo tối đa một lần; unique reversal_of_id chống đảo trùng.",
+        "Đảo movement thuộc phiếu không tự sửa trạng thái Receipt/Shipment; cần policy chứng từ liên quan.",
+        "Rollback toàn bộ nếu lỗi ledger/tồn. Reversal không thay thế quy trình hủy chứng từ đã nhận."
+      ]
+    },
+    {
+      "name": "wms_overview",
+      "title": "BPMN — Toàn cảnh ứng dụng WMS",
+      "subtitle": "Một phiên làm việc: chọn một chức năng độc lập, xử lý rồi trở về. Không phải chuỗi bắt buộc Nhập → Xuất → Kiểm kê.",
+      "width": 2300,
+      "height": 1650,
+      "lanes": null,
+      "notes": [
+        "Mỗi call activity được phân rã trong file BPMN cùng tên; auth/permission/scope vẫn được kiểm tra tại API từng chức năng.",
+        "Đây là bản thiết kế theo tài liệu: chi tiết TRANSIT, FEFO và vòng đời chứng từ Outbound chưa được chốt hoàn toàn."
+      ],
+      "nodes": [
+        {
+          "id": "Start",
+          "text": "Mở ứng dụng",
+          "x": 80,
+          "y": 170,
+          "type": "start",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        },
+        {
+          "id": "Access",
+          "text": "Xác thực / phân quyền\naccess_rbac.bpmn",
+          "x": 180,
+          "y": 145,
+          "type": "callActivity",
+          "w": 235,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Select",
+          "text": "Chọn chức năng",
+          "x": 505,
+          "y": 160,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 0
+        },
+        {
+          "id": "Master",
+          "text": "Quản trị / danh mục\nmaster_data.bpmn",
+          "x": 770,
+          "y": 140,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Inbound",
+          "text": "Nhập hàng / cất hàng\ninbound_putaway.bpmn",
+          "x": 770,
+          "y": 300,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Outbound",
+          "text": "Xuất hàng\noutbound_shipping.bpmn",
+          "x": 770,
+          "y": 460,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Transfer",
+          "text": "Chuyển kho\nwarehouse_transfer.bpmn",
+          "x": 770,
+          "y": 620,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Count",
+          "text": "Kiểm kê / chất lượng\ncycle_count_inspection.bpmn",
+          "x": 770,
+          "y": 780,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Adjust",
+          "text": "Điều chỉnh có duyệt\nadjustment_approval.bpmn",
+          "x": 770,
+          "y": 940,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Lookup",
+          "text": "Tra cứu / tem QR\nlookup_reporting.bpmn",
+          "x": 770,
+          "y": 1100,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Reversal",
+          "text": "Đảo sổ cái\nledger_reversal.bpmn",
+          "x": 770,
+          "y": 1260,
+          "type": "callActivity",
+          "w": 310,
+          "h": 85,
+          "lane": 0
+        },
+        {
+          "id": "Merge",
+          "text": "Kết thúc thao tác",
+          "x": 1360,
+          "y": 675,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 0
+        },
+        {
+          "id": "Continue",
+          "text": "Làm tiếp?",
+          "x": 1700,
+          "y": 675,
+          "type": "gateway",
+          "w": 50,
+          "h": 50,
+          "lane": 0
+        },
+        {
+          "id": "End",
+          "text": "Rời ứng dụng",
+          "x": 1960,
+          "y": 682,
+          "type": "end",
+          "w": 36,
+          "h": 36,
+          "lane": 0
+        }
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "Access",
+          "text": ""
+        },
+        {
+          "from": "Access",
+          "to": "Select",
+          "text": ""
+        },
+        {
+          "from": "Select",
+          "to": "Master",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              630,
+              185
+            ],
+            [
+              630,
+              182.5
+            ],
+            [
+              770,
+              182.5
+            ]
+          ]
+        },
+        {
+          "from": "Master",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              182.5
+            ],
+            [
+              1170,
+              182.5
+            ],
+            [
+              1170,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Inbound",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              638,
+              185
+            ],
+            [
+              638,
+              342.5
+            ],
+            [
+              770,
+              342.5
+            ]
+          ]
+        },
+        {
+          "from": "Inbound",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              342.5
+            ],
+            [
+              1180,
+              342.5
+            ],
+            [
+              1180,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Outbound",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              646,
+              185
+            ],
+            [
+              646,
+              502.5
+            ],
+            [
+              770,
+              502.5
+            ]
+          ]
+        },
+        {
+          "from": "Outbound",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              502.5
+            ],
+            [
+              1190,
+              502.5
+            ],
+            [
+              1190,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Transfer",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              654,
+              185
+            ],
+            [
+              654,
+              662.5
+            ],
+            [
+              770,
+              662.5
+            ]
+          ]
+        },
+        {
+          "from": "Transfer",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              662.5
+            ],
+            [
+              1200,
+              662.5
+            ],
+            [
+              1200,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Count",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              662,
+              185
+            ],
+            [
+              662,
+              822.5
+            ],
+            [
+              770,
+              822.5
+            ]
+          ]
+        },
+        {
+          "from": "Count",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              822.5
+            ],
+            [
+              1210,
+              822.5
+            ],
+            [
+              1210,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Adjust",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              670,
+              185
+            ],
+            [
+              670,
+              982.5
+            ],
+            [
+              770,
+              982.5
+            ]
+          ]
+        },
+        {
+          "from": "Adjust",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              982.5
+            ],
+            [
+              1220,
+              982.5
+            ],
+            [
+              1220,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Lookup",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              678,
+              185
+            ],
+            [
+              678,
+              1142.5
+            ],
+            [
+              770,
+              1142.5
+            ]
+          ]
+        },
+        {
+          "from": "Lookup",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              1142.5
+            ],
+            [
+              1230,
+              1142.5
+            ],
+            [
+              1230,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Select",
+          "to": "Reversal",
+          "text": "",
+          "points": [
+            [
+              555,
+              185
+            ],
+            [
+              686,
+              185
+            ],
+            [
+              686,
+              1302.5
+            ],
+            [
+              770,
+              1302.5
+            ]
+          ]
+        },
+        {
+          "from": "Reversal",
+          "to": "Merge",
+          "text": "",
+          "points": [
+            [
+              1080,
+              1302.5
+            ],
+            [
+              1240,
+              1302.5
+            ],
+            [
+              1240,
+              700
+            ],
+            [
+              1360,
+              700
+            ]
+          ]
+        },
+        {
+          "from": "Merge",
+          "to": "Continue",
+          "text": ""
+        },
+        {
+          "from": "Continue",
+          "to": "End",
+          "text": "Không"
+        },
+        {
+          "from": "Continue",
+          "to": "Select",
+          "text": "Có",
+          "points": [
+            [
+              1725,
+              675
+            ],
+            [
+              1725,
+              110
+            ],
+            [
+              530,
+              110
+            ],
+            [
+              530,
+              160
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
