@@ -56,12 +56,564 @@
 
 ---
 
-## 4. Danh sách chi tiết API, Phân quyền & DTO (Đối chiếu 100% Schema DB)
+## 4. Danh sách chi tiết API, Phân quyền & DTO (Phục hồi 100% Chi tiết & Tác động DB)
 
 *Lưu ý chung: BIGINT → String, Decimal → String. Audit fields (createdBy, updatedBy) lấy từ JWT token. Phân trang mặc định 1/20.*
 
 ### 4.1. Xuất kho (Shipment)
 **Quyền:** `SHIPMENT.READ/CREATE/UPDATE/ASSIGN/PICK/CANCEL/DISPATCH`, `INVENTORY.RESERVE`
+
+---
+
+**a. Tạo Phiếu Xuất (`POST /api/shipments`)**
+
+* **Tác động DB:**
+  * **`shipments`**: Thêm mới 1 dòng (Trạng thái mặc định: `NEW`). Lưu `customerInfo`, `assignedTo`.
+  * **`shipment_lines`**: Thêm các dòng cấu thành tương ứng, tính toán và lưu `requestedBaseQty` dựa trên `factorToBase` từ `sku_uom_conversions`.
+* **Request (`CreateShipmentDto`)**:
+```json
+{
+  "warehouseId": "1",
+  "customerInfo": "Khách hàng A - 0987654321 - 123 Nguyễn Văn Linh",
+  "assignedTo": "5",
+  "lines": [
+    {
+      "skuId": "1",
+      "uomId": "1",
+      "sourceLocationId": "10",
+      "requestedQty": "10.0000"
+    }
+  ]
+}
+```
+*(Ghi chú: `sourceLocationId` là vị trí kệ mà Supervisor dự kiến lấy hàng. Backend tự tính `factorToBase` từ `sku_uom_conversions` và snapshot vào `requestedBaseQty`)*
+* **Response**:
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "id": "1",
+    "code": "SHP-001",
+    "warehouseId": "1",
+    "customerInfo": "Khách hàng A - 0987654321 - 123 Nguyễn Văn Linh",
+    "assignedTo": "5",
+    "assignedToName": "Nguyễn Văn Picker",
+    "status": "NEW",
+    "lines": [
+      {
+        "id": "1",
+        "skuId": "1",
+        "skuCode": "SKU-001",
+        "skuName": "Sữa TH True Milk 1L",
+        "uomId": "1",
+        "uomName": "Thùng",
+        "factorToBase": "12.0000",
+        "sourceLocationId": "10",
+        "sourceLocationCode": "BIN-A1",
+        "requestedQty": "10.0000",
+        "requestedBaseQty": "120.0000",
+        "reservedBaseQty": "0",
+        "pickedQty": "0",
+        "pickedBaseQty": "0",
+        "shippedBaseQty": "0"
+      }
+    ],
+    "createdAt": "2026-10-07T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+**b. Cập nhật Phiếu Xuất (`PUT /api/shipments/{id}`)**
+
+* **Tác động DB**: Chỉ sửa bảng `shipments` hoặc `shipment_lines` (nếu thêm/xóa dòng). Chỉ cho phép khi `status = NEW`.
+* **Request (`UpdateShipmentDto`)**:
+```json
+{
+  "customerInfo": "Khách hàng B - Đổi địa chỉ",
+  "assignedTo": "6",
+  "lines": [
+    {
+      "skuId": "1",
+      "uomId": "1",
+      "sourceLocationId": "10",
+      "requestedQty": "15.0000"
+    }
+  ]
+}
+```
+
+---
+
+**c. Đổi người Phân công (`POST /api/shipments/{id}/assign`)**
+
+* **Tác động DB**: Update trường `assignedTo` trong bảng `shipments`.
+* **Request (`AssignShipmentDto`)**:
+```json
+{ "assignedTo": "6" }
+```
+
+---
+
+**d. Gợi ý FEFO (`GET /api/shipments/{id}/fefo-suggestions`)**
+
+* **Tác động DB**: Không ghi DB. Chỉ Query `inventory` theo `skuId`, `ORDER BY expiry_date ASC`, điều kiện `qty_available > 0`.
+* **Response**:
+```json
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "shipmentLineId": "1",
+      "skuId": "1",
+      "skuCode": "SKU-001",
+      "suggestedInventories": [
+        {
+          "inventoryId": "100",
+          "locationId": "10",
+          "locationCode": "BIN-A1",
+          "lotNo": "LOT-2026-01",
+          "serialNo": null,
+          "expiryDate": "2026-12-01",
+          "qtyOnHand": "50.0000",
+          "qtyReserved": "0",
+          "qtyAvailable": "50.0000"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+**e. Khóa Tồn kho - Reserve (`POST /api/shipments/{id}/reserve`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`shipment_lines`**: Cập nhật `sourceInventoryId`, `sourceLocationId` và `reservedBaseQty`.
+  * **`inventory` (Gốc)**: Tăng cột `qty_reserved` lên tương ứng lượng khóa. Validate `qty_reserved <= qty_on_hand` để không văng lỗi DB Constraint.
+* **Request (`ReserveShipmentDto`)**: 
+```json
+{
+  "lines": [
+    {
+      "shipmentLineId": "1",
+      "sourceInventoryId": "100",
+      "sourceLocationId": "10",
+      "reservedQty": "10.0000",
+      "reservedBaseQty": "120.0000"
+    }
+  ]
+}
+```
+
+---
+
+**f. Pick sang STAGING (`POST /api/shipments/{id}/pick`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`shipments`**: Đổi status -> `PICKING` hoặc `PICKED`.
+  * **`shipment_lines`**: Ghi nhận `pickedQty`, `pickedBaseQty` và `stagingLocationId`.
+  * **`inventory` (Gốc)**: Trừ `qty_on_hand` và `qty_reserved`.
+  * **`inventory` (STAGING)**: Tăng `qty_on_hand` tại `stagingLocationId`.
+  * **`stock_ledger`**: Ghi nhận 1 dòng luân chuyển (Từ Kệ gốc sang STAGING) hoặc 2 dòng (OUT gốc, IN staging).
+* **Request (`PickShipmentDto`)**:
+```json
+{
+  "lines": [
+    {
+      "shipmentLineId": "1",
+      "pickedQty": "8.0000",
+      "pickedBaseQty": "96.0000",
+      "stagingLocationId": "99"
+    }
+  ]
+}
+```
+
+---
+
+**g. Xuất hàng - Dispatch (`POST /api/shipments/{id}/dispatch`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`shipment_dispatch_lines`**: Insert dòng ghi nhận lịch sử với `requestId` để chặn dội lệnh. Ghi ID người thực hiện vào `shippedBy`.
+  * **`shipment_lines`**: Cộng dồn lượng đã xuất vào `shippedBaseQty`.
+  * **`shipments`**: Nếu tổng `shippedBaseQty` < `requestedBaseQty` -> Cập nhật `status = PARTIALLY_SHIPPED`. Nếu đủ -> `SHIPPED`.
+  * **`inventory` (STAGING)**: Trừ vĩnh viễn `qty_on_hand` tại khu vực STAGING.
+  * **`stock_ledger`**: Thêm 1 dòng `SHIPMENT` ghi nhận hàng đi khỏi kho.
+* **Request (`DispatchShipmentDto`)**:
+```json
+{
+  "dispatchCode": "DSP-001",
+  "requestId": "550e8400-e29b-41d4-a716-446655440000",
+  "lines": [
+    {
+      "shipmentLineId": "1",
+      "stagingInventoryId": "200",
+      "shippedBaseQty": "96.0000"
+    }
+  ]
+}
+```
+* **Response**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "shipmentId": "1",
+    "status": "PARTIALLY_SHIPPED",
+    "dispatchedLines": [
+      {
+        "shipmentLineId": "1",
+        "shippedBaseQty": "96.0000",
+        "remainingBaseQty": "24.0000",
+        "stockLedgerId": "500"
+      }
+    ]
+  }
+}
+```
+
+---
+
+**h. Xem lịch sử Dispatch (`GET /api/shipments/{id}/dispatch-lines`)**
+
+* **Response**:
+```json
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "id": "1",
+      "shipmentLineId": "1",
+      "dispatchCode": "DSP-001",
+      "requestId": "550e8400-e29b-41d4-a716-446655440000",
+      "stagingInventoryId": "200",
+      "shippedBaseQty": "96.0000",
+      "stockLedgerId": "500",
+      "shippedBy": "5",
+      "shipperName": "Nguyễn Văn Picker",
+      "shippedAt": "2026-10-07T08:30:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 4.2. Chuyển kho (Transfer)
+**Quyền:** `TRANSFER.READ/CREATE/UPDATE/SUBMIT/ASSIGN/APPROVE/REJECT/RESERVE/PICK/DISPATCH/RECEIVE/CANCEL`
+
+---
+
+**a. Tạo Draft (Kho Nguồn: `POST /api/transfers`)**
+
+* **Tác động DB:**
+  * **`transfers`**: Insert 1 dòng (Trạng thái `DRAFT`). Lưu `sourceWarehouseId`, `destinationWarehouseId`, `pickerId`, `reason`.
+  * **`transfer_lines`**: Insert chi tiết sản phẩm và `requestedBaseQty`.
+* **Request (`CreateTransferDto`)**:
+```json
+{
+  "sourceWarehouseId": "1",
+  "destinationWarehouseId": "2",
+  "pickerId": "8",
+  "reason": "Điều chuyển nội bộ do tràn kho",
+  "lines": [
+    {
+      "skuId": "1",
+      "uomId": "1",
+      "factorToBase": "12.0000",
+      "sourceLocationId": "10",
+      "sourceInventoryId": "100",
+      "lotNo": "LOT-2026-01",
+      "requestedBaseQty": "120.0000"
+    }
+  ]
+}
+```
+* **Response**:
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "id": "1",
+    "code": "TRF-001",
+    "sourceWarehouseId": "1",
+    "destinationWarehouseId": "2",
+    "pickerId": "8",
+    "status": "DRAFT",
+    "lines": [
+      {
+        "id": "1",
+        "skuId": "1",
+        "uomId": "1",
+        "factorToBase": "12.0000",
+        "sourceLocationId": "10",
+        "sourceInventoryId": "100",
+        "lotNo": "LOT-2026-01",
+        "requestedBaseQty": "120.0000",
+        "approvedBaseQty": "0",
+        "sentBaseQty": "0",
+        "receivedBaseQty": "0"
+      }
+    ],
+    "createdAt": "2026-10-07T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+**b. Cập nhật Draft (`PUT /api/transfers/{id}`)**
+
+* **Tác động DB**: Update `transfers` hoặc `transfer_lines`. Chỉ áp dụng khi status `DRAFT` hoặc `PENDING`.
+* **Request (`UpdateTransferDto`)**:
+```json
+{
+  "pickerId": "9",
+  "reason": "Cập nhật lý do chuyển",
+  "lines": [
+    {
+      "skuId": "1",
+      "uomId": "1",
+      "factorToBase": "12.0000",
+      "requestedBaseQty": "60.0000"
+    }
+  ]
+}
+```
+
+---
+
+**c. Gửi duyệt (`POST /api/transfers/{id}/submit`)**
+
+* **Tác động DB**: Cập nhật status `DRAFT` -> `PENDING_APPROVAL`. (Body rỗng).
+
+---
+
+**d. Duyệt Phiếu (Kho Đích: `POST /api/transfers/{id}/approve`)**
+
+* **Tác động DB**:
+  * **`transfers`**: Cập nhật `status = APPROVED`. Ghi người duyệt (`destinationApprovedBy`), thời gian duyệt (`destinationApprovedAt`), và chỉ định nhân viên nhận hàng (`receiverId`).
+* **Request (`ApproveTransferDto`)**:
+```json
+{ "receiverId": "6" }
+```
+
+---
+
+**e. Từ chối (`POST /api/transfers/{id}/reject`)**
+
+* **Tác động DB**: Cập nhật status `REJECTED`, lưu lý do từ chối mà không đè lên `reason` gốc.
+* **Request (`RejectTransferDto`)**:
+```json
+{ "reviewNote": "Kho đích hiện không đủ diện tích chứa" }
+```
+
+---
+
+**f. Gửi đi - Dispatch (`POST /api/transfers/{id}/dispatch`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`transfers`**: Chuyển status sang `IN_TRANSIT`. Ghi `dispatchedBy`, `dispatchedAt`.
+  * **`transfer_lines`**: Ghi số lượng đã gửi thực tế vào `sentBaseQty`.
+  * **`inventory` (Kho nguồn)**: Trừ lượng tồn kho ở kệ kho đi.
+  * **`inventory` (Transit)**: Cộng lượng hàng vào kho ảo `transitLocationId`.
+  * **`stock_ledger`**: Ghi 1 dòng loại `TRANSFER_OUT` ở kho nguồn.
+* **Request (`DispatchTransferDto`)**:
+```json
+{
+  "transitLocationId": "200",
+  "lines": [
+    {
+      "transferLineId": "1",
+      "sentBaseQty": "120.0000"
+    }
+  ]
+}
+```
+
+---
+
+**g. Nhận hàng (Kho Đích: `POST /api/transfers/{id}/receive`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`transfer_lines`**: Ghi `receivedBaseQty`, bến nhận `receivingLocationId`, và kệ cất cuối `targetLocationId`.
+  * **`transfers`**: Đổi status `COMPLETED` (nếu nhận đủ) hoặc `DISCREPANCY` (nếu thiếu). Ghi `receivedBy`, `receivedAt`.
+  * **`inventory` (Transit)**: Trừ tồn kho tại kho ảo transit.
+  * **`inventory` (Kho đích)**: Cộng tồn kho vào kệ thực tế `targetLocationId`.
+  * **`stock_ledger`**: Sinh 1 dòng loại `TRANSFER_IN` ở kho đích.
+* **Request (`ReceiveTransferDto`)**:
+```json
+{
+  "lines": [
+    {
+      "transferLineId": "1",
+      "receivingLocationId": "55",
+      "targetLocationId": "60",
+      "receivedBaseQty": "100.0000"
+    }
+  ]
+}
+```
+
+---
+
+### 4.3. Bút toán đảo (Reversal Request)
+
+---
+
+**a. Tạo Yêu cầu (`POST /api/reversals/requests`)**
+
+* **Tác động DB**:
+  * **`ledger_reversal_requests`**: Tạo 1 dòng `status = PENDING`. Lưu ID của dòng sổ cái bị sai vào `originalLedgerId`. Lưu ID người xin đảo vào `requestedBy`.
+* **Request (`CreateReversalRequestDto`)**:
+```json
+{
+  "originalLedgerId": "999",
+  "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01"
+}
+```
+* **Response**:
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "id": "1",
+    "originalLedgerId": "999",
+    "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01",
+    "requestedBy": "3",
+    "status": "PENDING",
+    "createdAt": "2026-10-07T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+**b. Cập nhật Yêu cầu (`PUT /api/reversals/requests/{id}`)**
+
+* **Tác động DB**: Chỉ cho phép update `reason` khi `status = PENDING` và thực hiện bởi chính `requestedBy`.
+* **Request (`UpdateReversalRequestDto`)**:
+```json
+{ "reason": "Bổ sung thêm biên bản giám đốc ký duyệt BB-02" }
+```
+
+---
+
+**c. Admin Duyệt (`POST /api/reversals/requests/{id}/approve`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`ledger_reversal_requests`**: Đổi status `APPROVED`, ghi `reviewedBy`, `reviewNote`.
+  * **`stock_ledger`**: Insert dòng mới (loại `REVERSAL`), `qtyChange` ngược dấu với dòng gốc, `reversalOfId` trỏ về dòng gốc. Không được xóa/sửa dòng gốc.
+  * **`inventory`**: Dựa theo `qtyChange` ngược dấu, cộng hoặc trừ để trả lại tồn kho ban đầu.
+* **Request (`ApproveReversalRequestDto`)**:
+```json
+{ "reviewNote": "Đã đối soát biên bản hợp lệ, duyệt đảo." }
+```
+* **Response**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "id": "1",
+    "status": "APPROVED",
+    "reversalLedgerId": "1000"
+  }
+}
+```
+
+---
+
+**d. Admin Từ chối (`POST /api/reversals/requests/{id}/reject`)**
+
+* **Tác động DB**: Chuyển status `REJECTED`, lưu `reviewNote`. (Không đảo tồn kho).
+* **Request (`RejectReversalRequestDto`)**:
+```json
+{ "reviewNote": "Chưa đính kèm biên bản đền bù." }
+```
+
+---
+
+### 4.4. Điều chỉnh Tồn kho (Quick Adjustment)
+
+---
+
+**a. Tạo Draft từ UI Tồn kho (`POST /api/adjustments`)**
+
+* **Tác động DB**:
+  * **`adjustments`**: Tạo 1 phiếu trạng thái `DRAFT`, lưu `proposedBy`.
+  * **`adjustment_lines`**: Ghi `systemQty`, `actualQty` và `qtyChange`.
+* **Request (`CreateAdjustmentDto`)**:
+```json
+{
+  "warehouseId": "1",
+  "reason": "Kiểm kê đột xuất phát hiện kho bị chuột cắn",
+  "lines": [
+    {
+      "inventoryId": "100",
+      "locationId": "10",
+      "skuId": "1",
+      "uomId": "1",
+      "lotNo": "LOT-2026-01",
+      "systemQty": "50.0000",
+      "actualQty": "48.0000",
+      "inventoryVersion": 2
+    }
+  ]
+}
+```
+*(Lưu ý: `inventoryVersion` dùng để bắt Snapshot 409)*
+* **Response**:
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "id": "1",
+    "code": "ADJ-001",
+    "status": "DRAFT",
+    "proposedBy": "3",
+    "lines": [
+      {
+        "id": "1",
+        "inventoryId": "100",
+        "locationId": "10",
+        "skuId": "1",
+        "uomId": "1",
+        "systemQty": "50.0000",
+        "actualQty": "48.0000",
+        "qtyChange": "-2.0000",
+        "inventoryVersion": 2
+      }
+    ]
+  }
+}
+```
+
+---
+
+**b. Gửi duyệt (`POST /api/adjustments/{id}/submit`)**
+
+* **Tác động DB**: Đổi status `DRAFT` -> `PENDING_APPROVAL`.
+
+---
+
+**c. Duyệt (`POST /api/adjustments/{id}/approve`)**
+
+* **Tác động DB (Bắt buộc dùng Transaction):**
+  * **`adjustments`**: Đổi status `APPROVED`, lưu `approvedBy` (phải khác `proposedBy`).
+  * **`inventory`**: Update `qty_on_hand` theo `qtyChange`. Tăng `version + 1`. Nếu sai version lúc duyệt -> 409 Conflict.
+  * **`stock_ledger`**: Ghi 1 dòng loại `ADJUST_IN` hoặc `ADJUST_OUT`.
+
+---
+
+**d. Từ chối (`POST /api/adjustments/{id}/reject`)**
+
+* **Request (`RejectAdjustmentDto`)**:
+```json
+{ "rejectionReason": "Lệch số lượng quá lớn so với định mức." }
+```
 
 ---
 
@@ -181,775 +733,6 @@
 **h. Xem lịch sử Dispatch (`GET /api/shipments/{id}/dispatch-lines`)**
 
 * Trả về danh sách `shipment_dispatch_lines` kèm thông tin `shipper`.
-
----
-
-### 4.2. Chuyển kho (Transfer)
-**Quyền:** `TRANSFER.READ/CREATE/UPDATE/SUBMIT/ASSIGN/APPROVE/REJECT/RESERVE/PICK/DISPATCH/RECEIVE/CANCEL`
-
----
-
-**a. Tạo Draft (Kho Nguồn: `POST /api/transfers`)**
-
-* **Tác động DB:**
-  * **`transfers`**: Insert 1 dòng (Trạng thái `DRAFT`). Lưu `sourceWarehouseId`, `destinationWarehouseId`, `pickerId`.
-  * **`transfer_lines`**: Insert danh sách hàng hóa kèm `requestedBaseQty`.
-* **Request (`CreateTransferDto`)**:
-```json
-{
-  "sourceWarehouseId": "1",
-  "destinationWarehouseId": "2",
-  "pickerId": "8",
-  "reason": "Điều chuyển nội bộ",
-  "lines": [
-    {
-      "skuId": "1",
-      "uomId": "1",
-      "factorToBase": "12.0000",
-      "sourceLocationId": "10",
-      "sourceInventoryId": "100",
-      "lotNo": "LOT-2026-01",
-      "requestedBaseQty": "120.0000"
-    }
-  ]
-}
-```
-
----
-
-**b. Duyệt Phiếu (Kho Đích: `POST /api/transfers/{id}/approve`)**
-
-* **Tác động DB:**
-  * **`transfers`**: Cập nhật `status = APPROVED`. Lưu người duyệt vào `destinationApprovedBy` và người sẽ nhận hàng vào `receiverId`.
-
----
-
-**c. Từ chối (`POST /api/transfers/{id}/reject`)**
-
-* **Tác động DB**: Chuyển trạng thái sang `REJECTED`. (Lưu thêm `reviewNote` nếu có).
-
----
-
-**d. Gửi đi - Dispatch (`POST /api/transfers/{id}/dispatch`)**
-
-* **Tác động DB (Bắt buộc dùng Transaction):**
-  * **`transfers`**: Chuyển trạng thái sang `IN_TRANSIT`. Lưu `dispatchedBy`, `dispatchedAt`.
-  * **`transfer_lines`**: Cập nhật số lượng đã gửi `sentBaseQty`.
-  * **`inventory` (Kho nguồn)**: Trừ vĩnh viễn tồn kho của kho nguồn.
-  * **`inventory` (Transit)**: Cộng tồn kho ảo vào `transitLocationId` để quản lý hàng đang trên đường.
-  * **`stock_ledger`**: Ghi 1 dòng loại `TRANSFER_OUT` tại kho nguồn.
-* **Request (`DispatchTransferDto`)**:
-```json
-{
-  "transitLocationId": "200",
-  "lines": [
-    {
-      "transferLineId": "1",
-      "sentBaseQty": "120.0000"
-    }
-  ]
-}
-```
-
----
-
-**e. Nhận hàng (Kho Đích: `POST /api/transfers/{id}/receive`)**
-
-* **Tác động DB (Bắt buộc dùng Transaction):**
-  * **`transfer_lines`**: Cập nhật `receivedBaseQty`, `receivingLocationId` (khu vực bến nhận) và `targetLocationId` (kệ cất hàng).
-  * **`transfers`**: Kiểm tra nếu tổng `receivedBaseQty` < `sentBaseQty` -> Cập nhật trạng thái `DISCREPANCY` (Bất thường). Nếu đủ -> `COMPLETED`. Lưu `receivedBy`, `receivedAt`.
-  * **`inventory` (Transit)**: Trừ số lượng tồn kho ảo đang trên đường tương ứng với số lượng nhận thực tế.
-  * **`inventory` (Kho đích)**: Cộng lượng hàng vào kệ `targetLocationId`.
-  * **`stock_ledger`**: Ghi 1 dòng loại `TRANSFER_IN` tại kho đích.
-* **Request (`ReceiveTransferDto`)**:
-```json
-{
-  "lines": [
-    {
-      "transferLineId": "1",
-      "receivingLocationId": "55",
-      "targetLocationId": "60",
-      "receivedBaseQty": "100.0000"
-    }
-  ]
-}
-```
-
----
-
-### 4.3. Bút toán đảo (Reversal Request)
-
----
-
-**a. Tạo Yêu cầu (`POST /api/reversals/requests`)**
-
-* **Tác động DB**:
-  * **`ledger_reversal_requests`**: Tạo 1 dòng mới `status = PENDING`. Lưu ID của dòng `stock_ledger` gốc vào `originalLedgerId`. Lưu ID người yêu cầu vào `requestedBy`.
-* **Request (`CreateReversalRequestDto`)**:
-```json
-{
-  "originalLedgerId": "999",
-  "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01"
-}
-```
-
----
-
-**b. Admin Duyệt (`POST /api/reversals/requests/{id}/approve`)**
-
-* **Tác động DB (Bắt buộc dùng Transaction):**
-  * **`ledger_reversal_requests`**: Cập nhật `status = APPROVED`, lưu `reviewedBy`, `reviewNote`.
-  * **`stock_ledger`**: Tạo mới 1 dòng giao dịch với loại `REVERSAL`. Dòng này có `qtyChange` ngược dấu hoàn toàn với dòng gốc. Điền `reversalOfId` trỏ ngược về dòng gốc. Đảm bảo dòng cũ KHÔNG BỊ XÓA HAY SỬA.
-  * **`inventory`**: Dựa theo `qtyChange` ngược dấu đó, thực hiện cộng hoặc trừ hoàn trả vào tồn kho hiện tại.
-* **Request (`ApproveReversalRequestDto`)**:
-```json
-{ "reviewNote": "Đã đối soát biên bản, đồng ý đảo." }
-```
-
----
-
-### 4.4. Điều chỉnh Tồn kho (Quick Adjustment)
-
----
-
-**a. Tạo Draft từ UI Tồn kho (`POST /api/adjustments`)**
-
-* **Tác động DB**:
-  * **`adjustments`**: Tạo 1 phiếu trạng thái `DRAFT`.
-  * **`adjustment_lines`**: Lưu thông tin lệch `systemQty`, `actualQty` và `qtyChange`.
-* **Request (`CreateAdjustmentDto`)**:
-```json
-{
-  "warehouseId": "1",
-  "reason": "Kiểm kê đột xuất phát hiện lệch",
-  "lines": [
-    {
-      "inventoryId": "100",
-      "locationId": "10",
-      "skuId": "1",
-      "uomId": "1",
-      "lotNo": "LOT-2026-01",
-      "systemQty": "50.0000",
-      "actualQty": "48.0000",
-      "inventoryVersion": 2
-    }
-  ]
-}
-```
-
----
-
-**b. Duyệt Phiếu Điều chỉnh (`POST /api/adjustments/{id}/approve`)**
-
-* **Tác động DB (Bắt buộc dùng Transaction):**
-  * **`adjustments`**: Cập nhật trạng thái `APPROVED`, lưu `approvedBy`, `approvedAt`.
-  * **`inventory`**: Kiểm tra khớp `inventoryVersion` (nếu không khớp trả 409). Cập nhật cộng/trừ `qty_on_hand` theo lượng `qtyChange`. Tăng `version` + 1.
-  * **`stock_ledger`**: Sinh 1 dòng `ADJUST_IN` hoặc `ADJUST_OUT` tương ứng ghi vết chênh lệch.
-
----
-
-**a. Tạo Phiếu Xuất (`POST /api/shipments`)**
-
-* **Request (`CreateShipmentDto`)**:
-
-```json
-{
-  "warehouseId": "1",
-  "customerInfo": "Khách hàng A - 0987654321 - 123 Nguyễn Văn Linh",
-  "assignedTo": "5",
-  "lines": [
-    {
-      "skuId": "1",
-      "uomId": "1",
-      "sourceLocationId": "10",
-      "requestedQty": "10.0000"
-    }
-  ]
-}
-```
-
-*(Ghi chú: `sourceLocationId` là vị trí kệ mà Supervisor dự kiến lấy hàng. Backend tự tính `factorToBase` từ `sku_uom_conversions` và snapshot vào `requestedBaseQty`)*
-
-* **Response**:
-
-```json
-{
-  "statusCode": 201,
-  "data": {
-    "id": "1",
-    "code": "SHP-001",
-    "warehouseId": "1",
-    "customerInfo": "Khách hàng A - 0987654321 - 123 Nguyễn Văn Linh",
-    "assignedTo": "5",
-    "assignedToName": "Nguyễn Văn Picker",
-    "status": "NEW",
-    "lines": [
-      {
-        "id": "1",
-        "skuId": "1",
-        "skuCode": "SKU-001",
-        "skuName": "Sữa TH True Milk 1L",
-        "uomId": "1",
-        "uomName": "Thùng",
-        "factorToBase": "12.0000",
-        "sourceLocationId": "10",
-        "sourceLocationCode": "BIN-A1",
-        "requestedQty": "10.0000",
-        "requestedBaseQty": "120.0000",
-        "reservedBaseQty": "0",
-        "pickedQty": "0",
-        "pickedBaseQty": "0",
-        "shippedBaseQty": "0"
-      }
-    ],
-    "createdAt": "2026-10-07T00:00:00.000Z"
-  }
-}
-```
-
----
-
-**b. Cập nhật Phiếu Xuất (`PUT /api/shipments/{id}`)**
-
-* Chỉ cho phép khi `status = NEW`.
-* **Request (`UpdateShipmentDto`)**:
-
-```json
-{
-  "customerInfo": "Khách hàng B - Đổi địa chỉ",
-  "assignedTo": "6",
-  "lines": [
-    {
-      "skuId": "1",
-      "uomId": "1",
-      "sourceLocationId": "10",
-      "requestedQty": "15.0000"
-    }
-  ]
-}
-```
-
----
-
-**c. Đổi người Phân công (`POST /api/shipments/{id}/assign`)**
-
-* **Request (`AssignShipmentDto`)**:
-
-```json
-{ "assignedTo": "6" }
-```
-
----
-
-**d. Gợi ý FEFO (`GET /api/shipments/{id}/fefo-suggestions`)**
-
-* Backend query `inventory` theo `skuId` của từng dòng, `ORDER BY expiry_date ASC`, chỉ lấy `qty_available > 0`.
-* **Response**:
-
-```json
-{
-  "statusCode": 200,
-  "data": [
-    {
-      "shipmentLineId": "1",
-      "skuId": "1",
-      "skuCode": "SKU-001",
-      "suggestedInventories": [
-        {
-          "inventoryId": "100",
-          "locationId": "10",
-          "locationCode": "BIN-A1",
-          "lotNo": "LOT-2026-01",
-          "serialNo": null,
-          "expiryDate": "2026-12-01",
-          "qtyOnHand": "50.0000",
-          "qtyReserved": "0",
-          "qtyAvailable": "50.0000"
-        },
-        {
-          "inventoryId": "101",
-          "locationId": "11",
-          "locationCode": "BIN-A2",
-          "lotNo": "LOT-2026-02",
-          "serialNo": null,
-          "expiryDate": "2027-03-15",
-          "qtyOnHand": "30.0000",
-          "qtyReserved": "5.0000",
-          "qtyAvailable": "25.0000"
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-**e. Khóa Tồn kho - Reserve (`POST /api/shipments/{id}/reserve`)**
-
-* **Request (`ReserveShipmentDto`)**: Chọn đích danh `sourceInventoryId` từ kết quả FEFO.
-
-```json
-{
-  "lines": [
-    {
-      "shipmentLineId": "1",
-      "sourceInventoryId": "100",
-      "sourceLocationId": "10",
-      "reservedQty": "10.0000",
-      "reservedBaseQty": "120.0000"
-    }
-  ]
-}
-```
-
-* **Tác động DB**: Tăng `qty_reserved` trong `inventory`. Ghi `sourceInventoryId`, `reservedBaseQty` vào `shipment_lines`.
-
----
-
-**f. Pick sang STAGING (`POST /api/shipments/{id}/pick`)**
-
-* **Request (`PickShipmentDto`)**: Picker điền số lượng thực tế lấy được và nơi đặt hàng tạm (STAGING).
-
-```json
-{
-  "lines": [
-    {
-      "shipmentLineId": "1",
-      "pickedQty": "8.0000",
-      "pickedBaseQty": "96.0000",
-      "stagingLocationId": "99"
-    }
-  ]
-}
-```
-
-* **Tác động DB**: Trừ `inventory` gốc, tạo/cộng `inventory` ở STAGING (purpose=STAGING). Ghi `pickedQty`, `pickedBaseQty`, `stagingLocationId` vào `shipment_lines`. Ghi `stock_ledger` (PICK_OUT từ gốc, PICK_IN vào staging — nếu schema cho phép, hoặc chỉ PICK_OUT).
-
----
-
-**g. Xuất hàng - Dispatch (`POST /api/shipments/{id}/dispatch`)**
-
-* **Request (`DispatchShipmentDto`)**: Ghi nhận xuất thực tế. `requestId` (UUID) là khóa idempotency.
-
-```json
-{
-  "dispatchCode": "DSP-001",
-  "requestId": "550e8400-e29b-41d4-a716-446655440000",
-  "lines": [
-    {
-      "shipmentLineId": "1",
-      "stagingInventoryId": "200",
-      "shippedBaseQty": "96.0000"
-    }
-  ]
-}
-```
-
-* **Tác động DB**: Lưu vào `shipment_dispatch_lines`. Trừ `inventory` STAGING. Ghi `stock_ledger` (SHIP_OUT). Cập nhật `shippedBaseQty` tổng ở `shipment_lines`. Nếu tổng `shippedBaseQty` < `requestedBaseQty` → status `PARTIALLY_SHIPPED`.
-* **Response**:
-
-```json
-{
-  "statusCode": 200,
-  "data": {
-    "shipmentId": "1",
-    "status": "PARTIALLY_SHIPPED",
-    "dispatchedLines": [
-      {
-        "shipmentLineId": "1",
-        "shippedBaseQty": "96.0000",
-        "remainingBaseQty": "24.0000",
-        "stockLedgerId": "500"
-      }
-    ]
-  }
-}
-```
-
----
-
-**h. Xem lịch sử Dispatch (`GET /api/shipments/{id}/dispatch-lines`)**
-
-* **Response**:
-
-```json
-{
-  "statusCode": 200,
-  "data": [
-    {
-      "id": "1",
-      "shipmentLineId": "1",
-      "dispatchCode": "DSP-001",
-      "requestId": "550e8400-e29b-41d4-a716-446655440000",
-      "stagingInventoryId": "200",
-      "shippedBaseQty": "96.0000",
-      "stockLedgerId": "500",
-      "shippedBy": "5",
-      "shipperName": "Nguyễn Văn Picker",
-      "shippedAt": "2026-10-07T08:30:00.000Z"
-    }
-  ]
-}
-```
-
----
-
-### 4.2. Chuyển kho (Transfer)
-
-**Quyền:** `TRANSFER.READ/CREATE/UPDATE/SUBMIT/ASSIGN/APPROVE/REJECT/RESERVE/PICK/DISPATCH/RECEIVE/CANCEL`
-
----
-
-**a. Tạo Draft (Kho Nguồn: `POST /api/transfers`)**
-
-* **Request (`CreateTransferDto`)**:
-
-```json
-{
-  "sourceWarehouseId": "1",
-  "destinationWarehouseId": "2",
-  "pickerId": "8",
-  "reason": "Kho 1 thừa hàng, điều chuyển sang Kho 2",
-  "lines": [
-    {
-      "skuId": "1",
-      "uomId": "1",
-      "factorToBase": "12.0000",
-      "sourceLocationId": "10",
-      "sourceInventoryId": "100",
-      "lotNo": "LOT-2026-01",
-      "serialNo": null,
-      "expiryDate": "2026-12-01",
-      "requestedBaseQty": "120.0000"
-    }
-  ]
-}
-```
-
-* **Response**:
-
-```json
-{
-  "statusCode": 201,
-  "data": {
-    "id": "1",
-    "code": "TRF-001",
-    "sourceWarehouseId": "1",
-    "sourceWarehouseName": "Kho Tân Bình",
-    "destinationWarehouseId": "2",
-    "destinationWarehouseName": "Kho Quận 7",
-    "pickerId": "8",
-    "pickerName": "Trần Văn Picker",
-    "reason": "Kho 1 thừa hàng, điều chuyển sang Kho 2",
-    "status": "DRAFT",
-    "lines": [
-      {
-        "id": "1",
-        "skuId": "1",
-        "skuCode": "SKU-001",
-        "skuName": "Sữa TH True Milk 1L",
-        "uomId": "1",
-        "uomName": "Thùng",
-        "factorToBase": "12.0000",
-        "sourceLocationId": "10",
-        "sourceLocationCode": "BIN-A1",
-        "sourceInventoryId": "100",
-        "lotNo": "LOT-2026-01",
-        "serialNo": null,
-        "expiryDate": "2026-12-01",
-        "requestedBaseQty": "120.0000",
-        "approvedBaseQty": "0",
-        "reservedBaseQty": "0",
-        "pickedBaseQty": "0",
-        "sentBaseQty": "0",
-        "receivedBaseQty": "0",
-        "receivingLocationId": null,
-        "targetLocationId": null
-      }
-    ],
-    "createdAt": "2026-10-07T00:00:00.000Z"
-  }
-}
-```
-
----
-
-**b. Cập nhật Draft (`PUT /api/transfers/{id}`)**
-
-* Chỉ khi `status = DRAFT`.
-* **Request (`UpdateTransferDto`)**:
-
-```json
-{
-  "pickerId": "9",
-  "reason": "Cập nhật lý do chuyển kho",
-  "lines": [
-    {
-      "skuId": "1",
-      "uomId": "1",
-      "factorToBase": "12.0000",
-      "sourceLocationId": "10",
-      "sourceInventoryId": "100",
-      "lotNo": "LOT-2026-01",
-      "serialNo": null,
-      "expiryDate": "2026-12-01",
-      "requestedBaseQty": "60.0000"
-    }
-  ]
-}
-```
-
----
-
-**c. Gửi duyệt (`POST /api/transfers/{id}/submit`)**
-
-* Chuyển từ `DRAFT` → `PENDING_APPROVAL`.
-* **Request**: Body rỗng.
-
----
-
-**d. Duyệt Phiếu (Kho Đích: `POST /api/transfers/{id}/approve`)**
-
-* Manager kho đích điền người nhận hàng.
-* **Request (`ApproveTransferDto`)**:
-
-```json
-{ "receiverId": "6" }
-```
-
-* **Tác động DB**: Ghi `destinationApprovedBy` (từ token), `destinationApprovedAt`, `receiverId`. Status → `APPROVED`.
-
----
-
-**e. Từ chối (`POST /api/transfers/{id}/reject`)**
-
-* **Request (`RejectTransferDto`)**:
-
-```json
-{ "reviewNote": "Kho đích không đủ chỗ lưu trữ" }
-```
-
----
-
-**f. Gửi đi - Dispatch (`POST /api/transfers/{id}/dispatch`)**
-
-* Picker kho nguồn lấy hàng và xác nhận gửi.
-* **Request (`DispatchTransferDto`)**:
-
-```json
-{
-  "transitLocationId": "200",
-  "lines": [
-    {
-      "transferLineId": "1",
-      "sentBaseQty": "120.0000"
-    }
-  ]
-}
-```
-
-* **Tác động DB**: Trừ `inventory` kho nguồn. Tạo `inventory` ở location purpose=TRANSIT. Ghi `stock_ledger` (TRANSFER_OUT). Ghi `dispatchedBy`, `dispatchedAt`. Status → `IN_TRANSIT`.
-
----
-
-**g. Nhận hàng (Kho Đích: `POST /api/transfers/{id}/receive`)**
-
-* Receiver kho đích điền vị trí cất hàng và số lượng nhận thực tế.
-* **Request (`ReceiveTransferDto`)**:
-
-```json
-{
-  "lines": [
-    {
-      "transferLineId": "1",
-      "receivingLocationId": "55",
-      "targetLocationId": "60",
-      "receivedBaseQty": "100.0000"
-    }
-  ]
-}
-```
-
-*(Ghi chú: `receivingLocationId` là nơi hàng tới (bến nhận), `targetLocationId` là kệ cất cuối cùng. Nếu nhận 100 < 120 gửi → DISCREPANCY, 20 nằm ở TRANSIT)*
-
-* **Tác động DB**: Trừ `inventory` TRANSIT. Tạo/cộng `inventory` kho đích. Ghi `stock_ledger` (TRANSFER_IN). Ghi `receivedBy`, `receivedAt`.
-
----
-
-### 4.3. Bút toán đảo (Reversal Request)
-
----
-
-**a. Tạo Yêu cầu (`POST /api/reversals/requests`)**
-
-* **Request (`CreateReversalRequestDto`)**:
-
-```json
-{
-  "originalLedgerId": "999",
-  "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01"
-}
-```
-
-* **Response**:
-
-```json
-{
-  "statusCode": 201,
-  "data": {
-    "id": "1",
-    "originalLedgerId": "999",
-    "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01",
-    "requestedBy": "3",
-    "requesterName": "Nguyễn Văn Manager",
-    "status": "PENDING",
-    "createdAt": "2026-10-07T00:00:00.000Z"
-  }
-}
-```
-
----
-
-**b. Cập nhật Yêu cầu (`PUT /api/reversals/requests/{id}`)**
-
-* Chỉ khi `status = PENDING` và do chính `requestedBy` thực hiện.
-* **Request (`UpdateReversalRequestDto`)**:
-
-```json
-{ "reason": "Cập nhật lý do chi tiết hơn, bổ sung biên bản BB-02" }
-```
-
----
-
-**c. Admin Duyệt (`POST /api/reversals/requests/{id}/approve`)**
-
-* **Request (`ApproveReversalRequestDto`)**:
-
-```json
-{ "reviewNote": "Đã đối soát biên bản, đồng ý đảo." }
-```
-
-* **Response**:
-
-```json
-{
-  "statusCode": 200,
-  "data": {
-    "id": "1",
-    "status": "APPROVED",
-    "reviewedBy": "1",
-    "reviewerName": "System Admin",
-    "reviewedAt": "2026-10-07T09:00:00.000Z",
-    "reversalLedgerId": "1000"
-  }
-}
-```
-
----
-
-**d. Admin Từ chối (`POST /api/reversals/requests/{id}/reject`)**
-
-* **Request (`RejectReversalRequestDto`)**:
-
-```json
-{ "reviewNote": "Không đủ minh chứng hợp lệ." }
-```
-
----
-
-**e. Người tạo Hủy (`POST /api/reversals/requests/{id}/cancel`)**
-
-* Chỉ khi `status = PENDING`. Body rỗng.
-
----
-
-### 4.4. Điều chỉnh Tồn kho (Quick Adjustment)
-
----
-
-**a. Tạo Draft từ UI Tồn kho (`POST /api/adjustments`)**
-
-* **Request (`CreateAdjustmentDto`)**:
-
-```json
-{
-  "warehouseId": "1",
-  "reason": "Kiểm kê đột xuất phát hiện lệch",
-  "lines": [
-    {
-      "inventoryId": "100",
-      "locationId": "10",
-      "skuId": "1",
-      "uomId": "1",
-      "lotNo": "LOT-2026-01",
-      "serialNo": null,
-      "systemQty": "50.0000",
-      "actualQty": "48.0000",
-      "inventoryVersion": 2
-    }
-  ]
-}
-```
-
-*(Ghi chú: Backend tự tính `qtyChange = actualQty - systemQty`. `inventoryVersion` snapshot check 409. `proposedBy` lấy từ JWT token)*
-
-* **Response**:
-
-```json
-{
-  "statusCode": 201,
-  "data": {
-    "id": "1",
-    "code": "ADJ-001",
-    "status": "DRAFT",
-    "proposedBy": "3",
-    "proposerName": "Nguyễn Văn Manager",
-    "lines": [
-      {
-        "id": "1",
-        "inventoryId": "100",
-        "locationId": "10",
-        "locationCode": "BIN-A1",
-        "skuId": "1",
-        "skuCode": "SKU-001",
-        "skuName": "Sữa TH True Milk 1L",
-        "uomId": "1",
-        "uomName": "Thùng",
-        "lotNo": "LOT-2026-01",
-        "serialNo": null,
-        "systemQty": "50.0000",
-        "actualQty": "48.0000",
-        "qtyChange": "-2.0000",
-        "inventoryVersion": 2
-      }
-    ]
-  }
-}
-```
-
----
-
-**b. Gửi duyệt (`POST /api/adjustments/{id}/submit`)**
-
-* Chuyển `DRAFT` → `PENDING_APPROVAL`. Body rỗng.
-
----
-
-**c. Duyệt (`POST /api/adjustments/{id}/approve`)**
-
-* Người duyệt phải khác người đề xuất.
-* **Tác động DB**: Cập nhật `qty_on_hand` trong `inventory`. Ghi `stock_ledger` (ADJUST_IN hoặc ADJUST_OUT). Ghi `approvedBy`, `approvedAt`.
-
----
-
-**d. Từ chối (`POST /api/adjustments/{id}/reject`)**
-
-* **Request (`RejectAdjustmentDto`)**:
-
-```json
-{ "rejectionReason": "Số liệu chênh lệch quá lớn, cần kiểm tra lại" }
-```
 
 ---
 
