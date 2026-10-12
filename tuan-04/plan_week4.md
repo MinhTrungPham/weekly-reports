@@ -12,7 +12,7 @@
 
 ---
 
-## 2. Kịch bản Nghiệp vụ Chi tiết 
+## 2. Kịch bản Nghiệp vụ Chi tiết
 
 **Kịch bản 1: Xuất kho (Shipment) & Xử lý Thiếu hàng**
 
@@ -61,6 +61,7 @@
 *Lưu ý chung: BIGINT → String, Decimal → String. Audit fields (createdBy, updatedBy) lấy từ JWT token. Phân trang mặc định 1/20.*
 
 ### 4.1. Xuất kho (Shipment)
+
 **Quyền:** `SHIPMENT.READ/CREATE/UPDATE/ASSIGN/PICK/CANCEL/DISPATCH`, `INVENTORY.RESERVE`
 
 ---
@@ -71,6 +72,7 @@
   * **`shipments`**: Thêm mới 1 dòng (Trạng thái mặc định: `NEW`). Lưu `customerInfo`, `assignedTo`.
   * **`shipment_lines`**: Thêm các dòng cấu thành tương ứng, tính toán và lưu `requestedBaseQty` dựa trên `factorToBase` từ `sku_uom_conversions`.
 * **Request (`CreateShipmentDto`)**:
+
 ```json
 {
   "warehouseId": "1",
@@ -86,8 +88,11 @@
   ]
 }
 ```
+
 *(Ghi chú: `sourceLocationId` là vị trí kệ mà Supervisor dự kiến lấy hàng. Backend tự tính `factorToBase` từ `sku_uom_conversions` và snapshot vào `requestedBaseQty`)*
+
 * **Response**:
+
 ```json
 {
   "statusCode": 201,
@@ -129,6 +134,7 @@
 
 * **Tác động DB**: Chỉ sửa bảng `shipments` hoặc `shipment_lines` (nếu thêm/xóa dòng). Chỉ cho phép khi `status = NEW`.
 * **Request (`UpdateShipmentDto`)**:
+
 ```json
 {
   "customerInfo": "Khách hàng B - Đổi địa chỉ",
@@ -150,6 +156,7 @@
 
 * **Tác động DB**: Update trường `assignedTo` trong bảng `shipments`.
 * **Request (`AssignShipmentDto`)**:
+
 ```json
 { "assignedTo": "6" }
 ```
@@ -160,6 +167,7 @@
 
 * **Tác động DB**: Không ghi DB. Chỉ Query `inventory` theo `skuId`, `ORDER BY expiry_date ASC`, điều kiện `qty_available > 0`.
 * **Response**:
+
 ```json
 {
   "statusCode": 200,
@@ -193,7 +201,8 @@
 * **Tác động DB (Bắt buộc dùng Transaction):**
   * **`shipment_lines`**: Cập nhật `sourceInventoryId`, `sourceLocationId` và `reservedBaseQty`.
   * **`inventory` (Gốc)**: Tăng cột `qty_reserved` lên tương ứng lượng khóa. Validate `qty_reserved <= qty_on_hand` để không văng lỗi DB Constraint.
-* **Request (`ReserveShipmentDto`)**: 
+* **Request (`ReserveShipmentDto`)**:
+
 ```json
 {
   "lines": [
@@ -219,6 +228,7 @@
   * **`inventory` (STAGING)**: Tăng `qty_on_hand` tại `stagingLocationId`.
   * **`stock_ledger`**: Ghi nhận 1 dòng luân chuyển (Từ Kệ gốc sang STAGING) hoặc 2 dòng (OUT gốc, IN staging).
 * **Request (`PickShipmentDto`)**:
+
 ```json
 {
   "lines": [
@@ -243,6 +253,7 @@
   * **`inventory` (STAGING)**: Trừ vĩnh viễn `qty_on_hand` tại khu vực STAGING.
   * **`stock_ledger`**: Thêm 1 dòng `SHIPMENT` ghi nhận hàng đi khỏi kho.
 * **Request (`DispatchShipmentDto`)**:
+
 ```json
 {
   "dispatchCode": "DSP-001",
@@ -256,7 +267,9 @@
   ]
 }
 ```
+
 * **Response**:
+
 ```json
 {
   "statusCode": 200,
@@ -280,6 +293,7 @@
 **h. Xem lịch sử Dispatch (`GET /api/shipments/{id}/dispatch-lines`)**
 
 * **Response**:
+
 ```json
 {
   "statusCode": 200,
@@ -303,6 +317,7 @@
 ---
 
 ### 4.2. Chuyển kho (Transfer)
+
 **Quyền:** `TRANSFER.READ/CREATE/UPDATE/SUBMIT/ASSIGN/APPROVE/REJECT/RESERVE/PICK/DISPATCH/RECEIVE/CANCEL`
 
 ---
@@ -313,6 +328,7 @@
   * **`transfers`**: Insert 1 dòng (Trạng thái `DRAFT`). Lưu `sourceWarehouseId`, `destinationWarehouseId`, `pickerId`, `reason`.
   * **`transfer_lines`**: Insert chi tiết sản phẩm và `requestedBaseQty`.
 * **Request (`CreateTransferDto`)**:
+
 ```json
 {
   "sourceWarehouseId": "1",
@@ -332,7 +348,9 @@
   ]
 }
 ```
+
 * **Response**:
+
 ```json
 {
   "statusCode": 201,
@@ -369,6 +387,7 @@
 
 * **Tác động DB**: Update `transfers` hoặc `transfer_lines`. Chỉ áp dụng khi status `DRAFT` hoặc `PENDING`.
 * **Request (`UpdateTransferDto`)**:
+
 ```json
 {
   "pickerId": "9",
@@ -397,6 +416,7 @@
 * **Tác động DB**:
   * **`transfers`**: Cập nhật `status = APPROVED`. Ghi người duyệt (`destinationApprovedBy`), thời gian duyệt (`destinationApprovedAt`), và chỉ định nhân viên nhận hàng (`receiverId`).
 * **Request (`ApproveTransferDto`)**:
+
 ```json
 { "receiverId": "6" }
 ```
@@ -407,6 +427,7 @@
 
 * **Tác động DB**: Cập nhật status `REJECTED`, lưu lý do từ chối mà không đè lên `reason` gốc.
 * **Request (`RejectTransferDto`)**:
+
 ```json
 { "reviewNote": "Kho đích hiện không đủ diện tích chứa" }
 ```
@@ -422,6 +443,7 @@
   * **`inventory` (Transit)**: Cộng lượng hàng vào kho ảo `transitLocationId`.
   * **`stock_ledger`**: Ghi 1 dòng loại `TRANSFER_OUT` ở kho nguồn.
 * **Request (`DispatchTransferDto`)**:
+
 ```json
 {
   "transitLocationId": "200",
@@ -445,6 +467,7 @@
   * **`inventory` (Kho đích)**: Cộng tồn kho vào kệ thực tế `targetLocationId`.
   * **`stock_ledger`**: Sinh 1 dòng loại `TRANSFER_IN` ở kho đích.
 * **Request (`ReceiveTransferDto`)**:
+
 ```json
 {
   "lines": [
@@ -469,13 +492,16 @@
 * **Tác động DB**:
   * **`ledger_reversal_requests`**: Tạo 1 dòng `status = PENDING`. Lưu ID của dòng sổ cái bị sai vào `originalLedgerId`. Lưu ID người xin đảo vào `requestedBy`.
 * **Request (`CreateReversalRequestDto`)**:
+
 ```json
 {
   "originalLedgerId": "999",
   "reason": "Điều chỉnh nhầm số lượng kiểm kê, biên bản BB-01"
 }
 ```
+
 * **Response**:
+
 ```json
 {
   "statusCode": 201,
@@ -496,6 +522,7 @@
 
 * **Tác động DB**: Chỉ cho phép update `reason` khi `status = PENDING` và thực hiện bởi chính `requestedBy`.
 * **Request (`UpdateReversalRequestDto`)**:
+
 ```json
 { "reason": "Bổ sung thêm biên bản giám đốc ký duyệt BB-02" }
 ```
@@ -509,10 +536,13 @@
   * **`stock_ledger`**: Insert dòng mới (loại `REVERSAL`), `qtyChange` ngược dấu với dòng gốc, `reversalOfId` trỏ về dòng gốc. Không được xóa/sửa dòng gốc.
   * **`inventory`**: Dựa theo `qtyChange` ngược dấu, cộng hoặc trừ để trả lại tồn kho ban đầu.
 * **Request (`ApproveReversalRequestDto`)**:
+
 ```json
 { "reviewNote": "Đã đối soát biên bản hợp lệ, duyệt đảo." }
 ```
+
 * **Response**:
+
 ```json
 {
   "statusCode": 200,
@@ -530,6 +560,7 @@
 
 * **Tác động DB**: Chuyển status `REJECTED`, lưu `reviewNote`. (Không đảo tồn kho).
 * **Request (`RejectReversalRequestDto`)**:
+
 ```json
 { "reviewNote": "Chưa đính kèm biên bản đền bù." }
 ```
@@ -546,6 +577,7 @@
   * **`adjustments`**: Tạo 1 phiếu trạng thái `DRAFT`, lưu `proposedBy`.
   * **`adjustment_lines`**: Ghi `systemQty`, `actualQty` và `qtyChange`.
 * **Request (`CreateAdjustmentDto`)**:
+
 ```json
 {
   "warehouseId": "1",
@@ -564,8 +596,11 @@
   ]
 }
 ```
+
 *(Lưu ý: `inventoryVersion` dùng để bắt Snapshot 409)*
+
 * **Response**:
+
 ```json
 {
   "statusCode": 201,
@@ -611,6 +646,7 @@
 **d. Từ chối (`POST /api/adjustments/{id}/reject`)**
 
 * **Request (`RejectAdjustmentDto`)**:
+
 ```json
 { "rejectionReason": "Lệch số lượng quá lớn so với định mức." }
 ```
@@ -623,6 +659,7 @@
   * **`shipments`**: Thêm mới 1 dòng (Trạng thái mặc định: `NEW`). Lưu `customerInfo`, `assignedTo`.
   * **`shipment_lines`**: Thêm các dòng cấu thành tương ứng, tính toán và lưu `requestedBaseQty` dựa trên `factorToBase` từ `sku_uom_conversions`.
 * **Request (`CreateShipmentDto`)**:
+
 ```json
 {
   "warehouseId": "1",
@@ -664,7 +701,8 @@
 * **Tác động DB (Bắt buộc dùng Transaction):**
   * **`shipment_lines`**: Cập nhật `sourceInventoryId`, `sourceLocationId` và `reservedBaseQty`.
   * **`inventory` (Gốc)**: Tăng cột `qty_reserved` lên tương ứng với lượng hàng được khóa. (Cần check điều kiện `qty_reserved <= qty_on_hand` để không bị DB văng lỗi Check Constraint).
-* **Request (`ReserveShipmentDto`)**: 
+* **Request (`ReserveShipmentDto`)**:
+
 ```json
 {
   "lines": [
@@ -690,6 +728,7 @@
   * **`inventory` (STAGING)**: Tăng `qty_on_hand` tại `stagingLocationId` (Nơi đặt hàng tạm chuẩn bị xuất).
   * **`stock_ledger`**: Ghi nhận 1 dòng luân chuyển (Từ Kệ gốc sang STAGING).
 * **Request (`PickShipmentDto`)**:
+
 ```json
 {
   "lines": [
@@ -714,6 +753,7 @@
   * **`inventory` (STAGING)**: Trừ vĩnh viễn `qty_on_hand` tại khu STAGING.
   * **`stock_ledger`**: Thêm mới 1 dòng ghi vết lịch sử giao dịch (loại `SHIPMENT`), nối `stock_ledger_id` vào bảng dispatch.
 * **Request (`DispatchShipmentDto`)**:
+
 ```json
 {
   "dispatchCode": "DSP-001",
@@ -744,9 +784,10 @@
 
 ## 6. Phân công Nhiệm vụ DEMO 2
 
-| Thành viên         | Trách nhiệm cốt lõi                                                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Nam Nguyen** | Luồng Shipment: Reserve / Pick sang STAGING / Dispatch / Giao bù. Lưu History/Status. Xử lý logic Pick 2 vế.                      |
-| **Thuan Le**   | Luồng Transfer: SOURCE/DESTINATION/BOTH, Gửi đi, Nhận về, trạng thái TRANSIT. Tích hợp chặn ngoại lệ trước khi gửi.      |
-| **Trung Pham** | Bút toán đảo (Reversal): API Request List/Detail/Reject/Cancel/Approve. Chặn route bypass. Giới hạn chỉ đảo chứng từ 1 vế. |
-| **Vy Tran**    | UI/UX                                                                                                                                   |
+| Thành viên         | Trách nhiệm cốt lõi                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nam Nguyen** | Luồng Shipment: Reserve / Pick sang STAGING / Dispatch / Giao bưu. Lưu History/Status. Xử lý logic Pick 2 vế.                                                    |
+| **Thuan Le**   | Luồng Transfer: SOURCE/DESTINATION/BOTH, Gửi đi, Nhận về, trạng thái TRANSIT. Tích hợp chặn ngoại lệ trước khi gửi.                                     |
+| **Trung Pham** | Bút toán đảo (Reversal) & Điều chỉnh nhanh: API Request List/Detail/Reject/Cancel/Approve. Chặn route bypass. Giới hạn chỉ đảo chứng từ 1 vế.          |
+| **Vy Tran**    | Frontend UI/UX: Xây dựng toàn bộ giao diện luồng **Xuất kho (Shipment)** cho các vai trò & Giao diện form **Điều chỉnh nhanh** tại Tồn kho. |
+| **Vy Tran**    | Frontend UI/UX: Xây dựng giao diện luồng **Chuyển kho (Transfer)** (Tab Gửi/Nhận) & Màn hình quản lý **Bút toán đảo (Reversal)**.           |
