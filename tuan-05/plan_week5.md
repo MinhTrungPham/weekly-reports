@@ -15,6 +15,7 @@ Tài liệu này kế thừa và phát triển từ **Tuần 4**, bổ sung đ�
    - Sơ đồ kho hỗ trợ lọc cả ô `ACTIVE` và `INACTIVE`.
    - Trang Tổng quan kho (Dashboard) cá nhân hóa chi tiết theo từng Role.
    - API Reset Password cho Admin.
+   - Ràng buộc an toàn khi Xóa mềm / Ngừng hoạt động kho (chặn vô hiệu hóa nếu kho còn hàng tồn).
 
 ---
 
@@ -392,7 +393,7 @@ model ReturnLine {
    * **Giao diện:** Thẻ trạng thái hệ thống (Uptime, Database connections), Thống kê số lượng User/Role, Nút tắt mở Reset Password nhanh.
    * **API:** `GET /api/dashboard/admin`
 
-* **Cấu trúc Response mẫu cho `WH_MANAGER` (`GET /api/dashboard/manager`)**:
+* **Cấu trúc Response mẫu cho `WH_MANAGER` (`GET /api/dashboard/manager?warehouseId=1`)**:
 ```json
 {
   "statusCode": 200,
@@ -427,6 +428,274 @@ model ReturnLine {
   }
 }
 ```
+
+* **Cấu trúc Response mẫu cho `SUPERVISOR` (`GET /api/dashboard/supervisor?warehouseId=1`)**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "warehouse": {
+      "id": "1",
+      "code": "WH-HCM-01",
+      "name": "Kho Tổng Nông Sản HCM"
+    },
+    "shiftProgress": {
+      "inbound": {
+        "totalOrders": 12,
+        "completedOrders": 8,
+        "inProgressOrders": 3,
+        "pendingOrders": 1,
+        "completionRate": 66.7
+      },
+      "picking": {
+        "totalWaves": 18,
+        "completedWaves": 14,
+        "inProgressWaves": 3,
+        "pendingWaves": 1,
+        "completionRate": 77.8
+      },
+      "cycleCount": {
+        "totalShelves": 40,
+        "countedShelves": 25,
+        "completionRate": 62.5
+      }
+    },
+    "unassignedTasks": {
+      "totalCount": 3,
+      "items": [
+        {
+          "type": "RECEIPT",
+          "id": "105",
+          "code": "PN-20261013-005",
+          "priority": "HIGH",
+          "createdAt": "2026-10-13T08:15:00.000Z"
+        },
+        {
+          "type": "PICK_WAVE",
+          "id": "89",
+          "code": "WAVE-20261013-012",
+          "priority": "URGENT",
+          "createdAt": "2026-10-13T08:30:00.000Z"
+        },
+        {
+          "type": "RETURN",
+          "id": "12",
+          "code": "RMA-20261013-002",
+          "priority": "NORMAL",
+          "createdAt": "2026-10-13T08:45:00.000Z"
+        }
+      ]
+    },
+    "activeStaff": {
+      "totalActive": 9,
+      "byRole": {
+        "receivers": 3,
+        "pickers": 4,
+        "inspectors": 2
+      },
+      "staffMembers": [
+        {
+          "id": "10",
+          "name": "Nguyễn Văn Nam",
+          "role": "RECEIVER",
+          "currentTask": "PN-20261013-003",
+          "tasksCompletedToday": 5
+        },
+        {
+          "id": "11",
+          "name": "Lê Văn Thuận",
+          "role": "PICKER",
+          "currentTask": "PX-20261013-015",
+          "tasksCompletedToday": 7
+        }
+      ]
+    }
+  }
+}
+```
+
+* **Cấu trúc Response mẫu cho `RECEIVER / PICKER` (`GET /api/dashboard/operator`)**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "user": {
+      "id": "11",
+      "username": "picker_thuan",
+      "fullName": "Lê Văn Thuận",
+      "primaryRole": "PICKER"
+    },
+    "todayPerformance": {
+      "completedTaskCount": 8,
+      "totalHandledQty": "450.5000",
+      "uomCode": "KG",
+      "completionRate": 80.0
+    },
+    "currentTask": {
+      "taskId": "204",
+      "taskType": "PICKING",
+      "orderCode": "PX-20261013-018",
+      "sourceLocation": "A1-R02-B03",
+      "targetLocation": "STAGING-01",
+      "skuCode": "DEMO04",
+      "skuName": "Cà chua bi Đà Lạt",
+      "quantity": "25.0000",
+      "status": "IN_PROGRESS",
+      "deadline": "2026-10-13T10:00:00.000Z",
+      "isOverdue": false
+    },
+    "assignedTasks": [
+      {
+        "taskId": "205",
+        "taskType": "PICKING",
+        "orderCode": "PX-20261013-020",
+        "itemCount": 3,
+        "priority": "URGENT",
+        "status": "ASSIGNED",
+        "deadline": "2026-10-13T10:30:00.000Z",
+        "isOverdue": false
+      },
+      {
+        "taskId": "198",
+        "taskType": "PUTAWAY",
+        "orderCode": "PN-20261013-002",
+        "itemCount": 1,
+        "priority": "HIGH",
+        "status": "ASSIGNED",
+        "deadline": "2026-10-13T09:15:00.000Z",
+        "isOverdue": true
+      }
+    ]
+  }
+}
+```
+
+* **Cấu trúc Response mẫu cho `INSPECTOR` (`GET /api/dashboard/inspector?warehouseId=1`)**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "warehouse": {
+      "id": "1",
+      "code": "WH-HCM-01",
+      "name": "Kho Tổng Nông Sản HCM"
+    },
+    "auditSummary": {
+      "activeCycles": 1,
+      "currentCycleCode": "AUDIT-202610-01",
+      "totalLocationsToCount": 50,
+      "countedLocations": 32,
+      "discrepancyCount": 4,
+      "progressPercent": 64.0
+    },
+    "pendingReturns": {
+      "pendingInspectionCount": 2,
+      "items": [
+        {
+          "returnId": "5",
+          "returnCode": "RMA-20261013-001",
+          "customerInfo": "Siêu thị Go! An Phú",
+          "receivedAt": "2026-10-13T08:20:00.000Z",
+          "quarantineLocation": "QC-HOLD-01",
+          "skuCode": "SKU-DUA-LUOI",
+          "receivedQty": "15.0000",
+          "reason": "Vỏ móp méo khi vận chuyển"
+        },
+        {
+          "returnId": "6",
+          "returnCode": "RMA-20261013-002",
+          "customerInfo": "Cửa hàng Rau Sạch Q7",
+          "receivedAt": "2026-10-13T08:50:00.000Z",
+          "quarantineLocation": "QC-HOLD-02",
+          "skuCode": "SKU-XA-LACH-ROM",
+          "receivedQty": "8.0000",
+          "reason": "Hàng héo dập do nhiệt độ cao"
+        }
+      ]
+    },
+    "criticalDiscrepancies": [
+      {
+        "skuCode": "DEMO01",
+        "skuName": "Gạo ST25 5kg",
+        "locationCode": "A1-R01-B02",
+        "systemQty": "100.0000",
+        "countedQty": "92.0000",
+        "diffQty": "-8.0000",
+        "discrepancyRate": -8.0
+      },
+      {
+        "skuCode": "DEMO04",
+        "skuName": "Cà chua bi Đà Lạt",
+        "locationCode": "A2-R01-B01",
+        "systemQty": "45.0000",
+        "countedQty": "50.0000",
+        "diffQty": "+5.0000",
+        "discrepancyRate": 11.1
+      }
+    ]
+  }
+}
+```
+
+* **Cấu trúc Response mẫu cho `ADMIN` (`GET /api/dashboard/admin`)**:
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "systemHealth": {
+      "status": "HEALTHY",
+      "uptimeSeconds": 345600,
+      "database": {
+        "status": "CONNECTED",
+        "latencyMs": 12,
+        "activeConnections": 8,
+        "maxPoolConnections": 20
+      },
+      "memoryUsage": {
+        "heapUsedMb": 142.5,
+        "heapTotalMb": 256.0,
+        "rssMb": 310.2
+      }
+    },
+    "userStatistics": {
+      "totalUsers": 24,
+      "activeUsers": 21,
+      "inactiveUsers": 3,
+      "usersByRole": {
+        "ADMIN": 2,
+        "WH_MANAGER": 3,
+        "SUPERVISOR": 4,
+        "RECEIVER": 6,
+        "PICKER": 6,
+        "INSPECTOR": 3
+      }
+    },
+    "securityAlerts": {
+      "failedLoginsLast24h": 5,
+      "recentPasswordResets": 2
+    },
+    "recentActivityLogs": [
+      {
+        "id": "1024",
+        "action": "USER_RESET_PASSWORD",
+        "performedBy": "admin_root",
+        "target": "picker_nam",
+        "ipAddress": "192.168.1.45",
+        "createdAt": "2026-10-13T08:30:15.000Z"
+      },
+      {
+        "id": "1023",
+        "action": "WAREHOUSE_DEACTIVATE_BLOCKED",
+        "performedBy": "manager_binh",
+        "target": "Kho Chi Nhánh Bình Dương",
+        "ipAddress": "192.168.1.12",
+        "createdAt": "2026-10-13T08:10:00.000Z"
+      }
+    ]
+  }
+}
+```
+
 
 ---
 
@@ -520,7 +789,36 @@ model ReturnLine {
 }
 ```
 
----
+#### d. Kiểm tra An toàn khi Xóa mềm / Ngừng hoạt động Kho (Soft Delete Guard)
+* **API:** `DELETE /api/warehouses/{id}` & `PUT /api/warehouses/{id}` (khi cập nhật `status: 'INACTIVE'`).
+* **Quyền:** `WAREHOUSE.DEACTIVATE` / `WAREHOUSE.UPDATE`
+* **Mô tả nghiệp vụ:** Trước khi chuyển trạng thái kho sang `INACTIVE` (xóa mềm), hệ thống bắt buộc kiểm tra xem trong kho còn bất kỳ mặt hàng nào có tồn kho hay không.
+* **Tác động DB & Logic kiểm tra:**
+  - Truy vấn kiểm tra bảng `inventory`:
+    ```typescript
+    const activeStock = await this.prisma.inventory.findFirst({
+      where: {
+        warehouseId: id,
+        qtyOnHand: { gt: 0 },
+      },
+    });
+    if (activeStock) {
+      throw new BadRequestException(
+        'Không thể xóa hoặc ngừng hoạt động kho hàng vì vẫn còn tồn hàng trong kho. Vui lòng xuất hoặc điều chuyển toàn bộ hàng tồn trước khi thực hiện.'
+      );
+    }
+    ```
+  - Nếu `activeStock` tồn tại: Chặn ngay lập tức và ném `400 Bad Request`.
+  - Nếu toàn bộ `qtyOnHand = 0`: Cho phép cập nhật `status = 'INACTIVE'`.
+* **Response khi lỗi (400 Bad Request):**
+```json
+{
+  "statusCode": 400,
+  "message": "Không thể xóa hoặc ngừng hoạt động kho hàng vì vẫn còn tồn hàng trong kho. Vui lòng xuất hoặc điều chuyển toàn bộ hàng tồn trước khi thực hiện.",
+  "error": "Bad Request"
+}
+```
+
 
 ## 5. Phân công Nhiệm vụ DEMO Tổng kết Tuần 5 (Đội ngũ 4 thành viên)
 
@@ -544,14 +842,15 @@ Vì **Nhật Quân đã rời nhóm**, khối lượng công việc được tá
 
 ---
 
-#### 2. Thuan Le - Phụ trách: Nhập kho Đa vị trí & Kiểm soát Sức chứa Kho theo Cấp bậc
-*   **Trọng tâm:** Giải quyết các bài toán vận hành cốt lõi về vị trí lưu trữ và sức chứa vật lý của hệ thống kho.
+#### 2. Thuan Le - Phụ trách: Nhập kho Đa vị trí, Sức chứa Kho & Ràng buộc Xóa kho
+*   **Trọng tâm:** Giải quyết các bài toán vận hành cốt lõi về vị trí lưu trữ, sức chứa vật lý và bảo vệ an toàn dữ liệu tồn kho.
 *   **Nhiệm vụ Backend chi tiết:**
     - Thêm trường `maxWeight` và `maxVolume` vào model `Warehouse`. Tạo model `ReceiptLineDetail`.
     - Nâng cấp API Nhập kho (`POST /api/receipts/{id}/receive`): Cho phép 1 dòng nhập chia thành nhiều dòng phân bổ (`allocations`), gỡ bỏ hoàn toàn logic ép cứng ô nhận, hỗ trợ nhận thẳng vào ô lưu trữ (`STORAGE`) hoặc ô hàng hỏng (`DAMAGED`).
     - Cài đặt thuật toán kiểm soát dung lượng & thể tích theo hình tháp: Tổng Ô (Bin) ≤ Kệ (Rack) ≤ Dãy (Aisle) ≤ Kho tổng. Chặn ném lỗi `400` nếu hàng nhập làm vượt quá sức chứa.
-*   **Hỗ trợ Frontend:** Chuẩn bị payload mẫu và phối hợp cùng Vy Tran ráp giao diện chia ô nhận hàng & hiển thị giới hạn tải trọng/thể tích.
-*   **Tiêu chí hoàn thành (DoD):** Nhập 1 dòng tách được nhiều ô (ô lưu trữ + ô hàng hỏng/cách ly); test chặn thành công khi nhập vượt quá tải trọng hoặc thể tích kho.
+    - Bổ sung Kiểm tra An toàn khi Xóa mềm Kho (`DELETE /api/warehouses/:id` và `PUT /api/warehouses/:id` khi đổi `status = 'INACTIVE'`): Truy vấn bảng `inventory`, nếu tồn tại bản ghi thuộc kho có `qtyOnHand > 0` thì chặn thao tác và ném lỗi `400 Bad Request` ("Không thể xóa hoặc ngừng hoạt động kho hàng vì vẫn còn tồn hàng trong kho...").
+*   **Hỗ trợ Frontend:** Chuẩn bị payload mẫu và phối hợp cùng Vy Tran ráp giao diện chia ô nhận hàng, hiển thị giới hạn tải trọng/thể tích và thông báo chặn xóa kho.
+*   **Tiêu chí hoàn thành (DoD):** Nhập 1 dòng tách được nhiều ô (ô lưu trữ + ô hàng hỏng/cách ly); test chặn thành công khi nhập vượt quá tải trọng hoặc thể tích kho; test chặn thành công khi cố tình xóa mềm kho vẫn còn tồn hàng.
 
 ---
 
@@ -584,6 +883,7 @@ Vì **Nhật Quân đã rời nhóm**, khối lượng công việc được tá
        - Gắn Badge màu sắc cảnh báo hạn dùng (Đỏ = Quá hạn, Vàng = Cận hạn ≤ 7 ngày) trong bảng Tồn kho; thêm nút bấm nhanh "Điều chỉnh".
     4. **Trang Dashboard Tổng quan:** Xây dựng màn hình Dashboard tự động đổi layout theo Role đăng nhập (Biểu đồ thanh dung lượng cho Manager, Thẻ công việc cần làm cho Picker/Receiver, Thẻ tiến độ ca cho Supervisor).
     5. **Modal Reset Password:** Thêm nút "Cấp lại mật khẩu" trong trang Quản lý Người dùng của Admin.
+    6. **Xử lý UX khi Vô hiệu hóa/Xóa kho:** Hiển thị popup xác nhận khi ngừng hoạt động kho và bắt lỗi `400` hiển thị thông báo rõ ràng cho người dùng nếu kho vẫn còn tồn hàng.
 *   **Tiêu chí hoàn thành (DoD):** Mọi màn hình kết nối API mượt mà, có xử lý trạng thái Loading/Error/Disable nút bấm chống spam, responsive thân thiện trên thiết bị di động.
 
 ---
@@ -594,11 +894,12 @@ Vì **Nhật Quân đã rời nhóm**, khối lượng công việc được tá
 | :--- | :---: | :---: | :---: |
 | **1. Nhập kho Đa vị trí (`ReceiptLineDetail`)** | Thuan Le | Vy Tran | Hoàn thành trước Demo |
 | **2. Kiểm soát Sức chứa Kho/Kệ theo Cấp bậc** | Thuan Le | Vy Tran | Hoàn thành trước Demo |
-| **3. Module Hàng hoàn trả (Returns / RMA)** | Nam Nguyen | Vy Tran | Hoàn thành trước Demo |
-| **4. Tự động sinh Mã vạch SKU-UOM** | Nam Nguyen | *(Tự động qua API)* | Hoàn thành trước Demo |
-| **5. Chuẩn hóa Luồng Bút toán đảo trong Ledger** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
-| **6. Phân quyền Enum, Seed RBAC & DB Patch** | Trung Pham | *(Áp dụng toàn hệ thống)* | Hoàn thành trước Demo |
-| **7. Cảnh báo Cận date trong Tồn kho** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
-| **8. Sơ đồ Vị trí Kho (Filter Active/Inactive & Tree)** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
-| **9. API Reset Password cho Admin** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
-| **10. Trang Dashboard Tổng quan theo 5 Role** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
+| **3. Kiểm tra An toàn khi Xóa mềm Kho (Warehouse Deactivate Guard)** | Thuan Le | Vy Tran | Hoàn thành trước Demo |
+| **4. Module Hàng hoàn trả (Returns / RMA)** | Nam Nguyen | Vy Tran | Hoàn thành trước Demo |
+| **5. Tự động sinh Mã vạch SKU-UOM** | Nam Nguyen | *(Tự động qua API)* | Hoàn thành trước Demo |
+| **6. Chuẩn hóa Luồng Bút toán đảo trong Ledger** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
+| **7. Phân quyền Enum, Seed RBAC & DB Patch** | Trung Pham | *(Áp dụng toàn hệ thống)* | Hoàn thành trước Demo |
+| **8. Cảnh báo Cận date trong Tồn kho** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
+| **9. Sơ đồ Vị trí Kho (Filter Active/Inactive & Tree)** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
+| **10. API Reset Password cho Admin** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
+| **11. Trang Dashboard Tổng quan theo 5 Role** | Trung Pham | Vy Tran | Hoàn thành trước Demo |
